@@ -1,0 +1,16 @@
+﻿body { font-family: 微软雅黑; font-size: 14px; color: #333; background:#ebebeb; }
+* { margin: 0px; padding: 0px; }
+ul li { list-style: none; }
+img { border: none; }
+a { text-decoration: none; color: #333; }
+a:hover { color: #108a75; }
+
+.login { width:425px; height:296px; background:url(../images/logoBg.gif); position:absolute; left:50%; top:50%; margin-left:-212px; margin-top:-148px; }
+.loginForm { float:left; display:inline; margin:94px 0px 0px 65px; }
+    .loginForm li { height:48px; line-height:48px; }    
+.loginForm label { width:58px; float:left; text-align:right; margin-right:10px;    }
+.userTxt,.userPwd { width:154px; height:30px; line-height:30px; float:left; border:none;  padding:0px 8px 0px 30px; margin-top:10px; }
+.userTxt {background:url(../images/userTxt.gif) no-repeat; }
+.userPwd { background:url(../images/userPwd.gif) no-repeat;}
+.loginBtn { width:112px; height:33px; float:left; border:none; background:url(../images/loginBtn.gif) no-repeat; font-family:微软雅黑; color:#fff; font-size:14px; cursor:pointer; margin-left:20px; margin-top:20px;}
+

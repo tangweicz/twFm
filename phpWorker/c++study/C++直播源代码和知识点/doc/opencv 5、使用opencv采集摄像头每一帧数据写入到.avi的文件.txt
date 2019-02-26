@@ -1,0 +1,26 @@
+cv::VideoCapture camera;
+
+cv::VideoWriter writer;//写入文件的对象
+
+cv::Mat img;//数据读取到放在这儿
+
+camera.open(0);
+
+writer.open("/Users/tangwei/Desktop/abc.avi",CV_FOURCC('M', 'J', 'P', 'G'),camera.get(CV_CAP_PROP_FPS)//FPS 捕捉帧率,影响生产的文件的播放速度, cv::Size(camera.get(CV_CAP_PROP_FRAME_WIDTH),camera.get(CV_CAP_PROP_FRAME_HEIGHT)),true);
+
+if (!writer.isOpened())
+{
+    std::cout << "打开文件失败" << std::endl;
+
+    exit(0);
+}
+
+while(true){
+
+     camera.read(img);//读取每一帧的数据，然后放入到img中去，可以通过img.data获取数据（不是字符串化的数据），img.cols获取到列数、img.rows获取到行数、img.elemSize()获取到一个像素的大小。其中列数的单位是：
+
+     writer << img;//写入视频数据到文件
+
+
+}
+

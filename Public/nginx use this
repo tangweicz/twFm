@@ -1,0 +1,40 @@
+server
+        {
+                listen       80;
+                server_name xinyuan.zhong5.cn;
+                index index.html index.htm index.php;
+                root  /usr/local/www/appwww/xinyuan/Public;
+
+                try_files $uri $uri/ @rewrite;
+
+                location @rewrite {
+
+                        rewrite ^(.*) /index.php?/$1 last;
+
+                }
+
+                location ~ \.(php|php5)
+                        {
+                                try_files $uri =404;
+                                fastcgi_pass  unix:/tmp/php-cgi.sock;
+                                fastcgi_index index.php;
+                                include fcgi.conf;
+                        }
+
+                location /status {
+                        stub_status on;
+                        access_log   off;
+                }
+
+                location ~ .*\.(gif|jpg|jpeg|png|bmp|swf)$
+                        {
+                                expires      30d;
+                        }
+
+                location ~ .*\.(js|css)?$
+                        {
+                                expires      12h;
+                        }
+
+                access_log  /home/wwwlogs/accesslian.log  access;
+        }

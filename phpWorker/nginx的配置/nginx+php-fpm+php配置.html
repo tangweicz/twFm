@@ -1,0 +1,36 @@
+server{
+
+    listen 80;
+
+    server_name www.example.com;
+
+    index index.php;
+
+    root /var/www/html/xxx/xxx;
+
+    try_files $uri $uri/ @rewrite;
+
+    location @rewrite{
+
+        rewrite ^(.*) /index.php?/$1 last;
+
+    }
+
+    location ~\.php {
+
+        include fastcgi_params;
+
+        fastcgi_index index.php;
+
+        fastcgi_pass 127.0.0.1:9000;
+
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+
+    }
+
+    location ~\.(js|png|jpg|jpeg)$ {
+
+        expires 30h;
+    }
+
+}

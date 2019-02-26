@@ -1,0 +1,130 @@
+终极目标，在虚拟机上，安装mysql的container、apache的container，让两个container可以一起被外界访问，同时配合工作
+
+先搞清楚，什么是image，什么是container。
+        1、什么是image，由诸多个image层组合而来，一般情况下 我们不需要自己创建，而是从docker hub上下载
+
+        2、什么是container，在一个image基础上嵌套一个可读写层，编程一个container，如果运行了这个容器，那么这个容器就会对外隔离，包括进程和进程空间。
+
+docker命令：
+        1、docker create <image id> 根据一个image创建一个container
+
+        2、docker start <container id> 开始运行一个container
+
+        3、docker run <image id> 这个命令相当于先运行docker create 再运行docker start两个命令 在运行docker attach   具体参数：   -d 在后台运行
+
+                                                                                                       -p 8080:80 将宿主机的8080端口映射到container中80端口
+
+                                                                                                       -ti 交互模式运行 后面加 镜像名：版本号 命令
+
+        4、docker ps 列出所有运行中的容器
+
+        5、docker ps -a 列出所有容器
+
+        6、docker images 列出所有的顶层镜像
+
+        7、docker images -a 列出所有的刻度镜像
+
+        8、docker stop <container id> 关闭一个container
+
+        9、docker rm <container id> 删除一个container
+
+        10、docker rmi <image id> 删除一个image
+
+        11、docker commit <container id>将一个container变成一个image    具体参数：-m "xxxxxx" containerID或者containerName  newImageName:tag
+
+        12、docker bulid 找到相关目录下的dockerFile然后，自己运行run（create、start）、commit
+
+        13、docker save <image id> 将一个image生成一个压缩文件，可以直接移植使用 参数：-o 文件名（保存的文件）
+
+        14、docker load -i 文件名（传递过来的文件），然后就新增了一个image，就可以正常使用这个image了
+
+        15、如果一个container在运行中，那么可以 docker exec -ti container 就能进入到container中
+
+
+
+
+
+
+
+
+
+
+                                docker的具体使用
+
+
+一、安装docker
+         1、添加centos的epel源
+                                yum install epel-release –y
+
+                                yum clean all
+
+
+         2、安装docker
+                                yum install docker-io –y
+
+                                systemctl start docker
+
+
+二、安装具体的image
+                                docker pull imagename
+
+三、具体用一个image去起一个container
+
+                                docker run -ti centos /bin/hash
+
+
+四：将我们修改后的container制作成image
+
+                                docker commit -m "xxxx" containername或containerId imagename:tag
+
+
+
+
+                                docker使用的具体实践
+
+
+一、ssh镜像的制作
+        1、在base镜像的基础上，制作一个container
+
+        2、在container中安装好sshd，配置好登录的用户名和密码
+
+        3、将这个container制作成一个新的image
+
+        4、在这个新的image的基础上，运行一个container，运行的命令是:  run -d -p 宿主机端口:内部端口 imageId /usr/sin/sshd -D
+
+
+二：在ssh的镜像的基础上做apache的镜像
+
+        1、将上述ssh镜像重新生成一个container，安装httpd的服务，然后退出来，并将要启动的项，写入到一个文件中，如：/usr/local/bin/run.sh中，内容为：
+
+                                #!/bin/bash
+                                /usr/sbin/sshd &
+                                /usr/sbin/httpd -D FOREGROUND
+
+                                确保该文件可运行
+
+        2、将上述的container，制作成image
+
+        3、在上述image的基础上运行，docker run -d -p xxx:22 xxx:80 上述image /usr/sbin/run.sh
+
+
+三：制作mysql的镜像
+
+        1、下载mariadb的镜像
+                                docker pull mariadb
+
+        2、基于mariadb的镜像，运行起一个container,注意先关闭selinux，不然-v的功能会受影响
+
+                                docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=tangwei -v /var/lib/mysqlbackup:/etc/backup mariadb镜像名
+
+                                现在已经能够基于3306端口，root用户，密码tangwei，已经能连上了
+
+        3、需要新增一个数据库咋办？
+
+                                docker exec -ti container名称 /bin/bash
+
+                                然后就可以新增数据库，给数据库授权，然后从外面就可以连接了
+
+        4、如何将docker中的数据库文件放到宿主机中
+
+                                docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=tangwei -v /etc/mysql:/var/lib/mysql mariadb镜像名

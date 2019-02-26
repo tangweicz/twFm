@@ -1,0 +1,69 @@
+一、什么是lvm：全名是：logic volumn management 逻辑卷管理。
+
+二、使用场景：一般情况下，我们的磁盘大小是固定的，一块磁盘一旦使用就不能变，而如是lvm，那么磁盘大小是你根据你的vg的大小可以自动变化。
+
+三、lvm的使用过程
+
+    1、创建lvm可以使用的磁盘
+
+        ①、fdisk /dev/sdb 对/dev/sdb 进行分区操作，具体操作 是先创建 主分区，主分区有且只有一个。
+                                                                    再创建扩展分区，扩展分区有且只有一个，
+                                                                    在扩展分区之下再继续分逻辑分区，注意逻辑分区才是我们真正用到的分区，同时逻辑分区一定要是linux lvm的格式
+
+    2、创建lvm的能使用的物理卷，pvcreate命令，pvdisplay是查看物理卷
+
+        pvcreate /dev/sdb5 /dev/sdb6 /dev/sdb7 这样就把逻辑分区/dev/sdb5、/dev/sdb6、/dev/sdb7变成了，lvm能用的物理卷
+
+    3、创建物理卷组,vgcreate明龙，vgdiaplsy查看物理卷组
+
+        vgcreate tangwei /dev/sdb5 /dev/sdb6
+
+    4、常见能使用的lvm，lvcreate命令，lvdisplay查看所有的lvm卷，lvreduce对lvm卷进行缩小容量的操作，lvextend对lvm进行扩大容量的操作
+
+        lvcreate -L 100M -name tangweilog tangwei 意思是从tangwei这个逻辑卷组中取100M，命名为tangweilog的的lvm给用户使用，那么当前的lvm放在了/dev/tangwei/tangweilog中，注意tangwei是物理卷组的名称，tangweilog是lvm的名称
+
+    5、给当前的tangweilog的lvm设置文件系统，不然没法使用
+
+        mkfs.ext3 /dev/tangwei/tanweilog
+
+    6、挂载使用
+
+        mount /dev/tangwei/tangweilog /xxx/xxx
+
+四、对lvm卷大小的扩充
+
+    1、卸载挂载的lvm卷
+
+        umount /dev/tangwei/tangweilog
+
+    2、对lvm卷进行扩充
+
+        lvextend -L +100M -n tangweilog
+
+    3、对文件系统重新加载
+
+        resize2fs /dev/tangwei/tangweilog
+
+    4、挂载使用
+
+
+五、对lvm卷大小的缩减
+
+    1、卸载的挂载的lvm卷
+
+        umount /dev/tangwei/tangweilog
+
+    2、对文件系统进行缩减
+
+        resize2fs /dev/tangwei/tangweilog 100M
+
+    3、对lvm卷的大小进行缩减
+
+        lvreduce -L 100M -n tangweilog
+
+    4、挂载使用
+
+
+
+
+

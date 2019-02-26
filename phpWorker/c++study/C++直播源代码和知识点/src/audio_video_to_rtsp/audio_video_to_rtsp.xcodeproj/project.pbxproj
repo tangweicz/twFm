@@ -1,0 +1,320 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4F748AE81FCE8F2E00BAB57B /* XAudioRecord.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F748AE61FCE8F2E00BAB57B /* XAudioRecord.cpp */; };
+		4F77D6E01FD523E9007FBF55 /* XVideoRecord.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F77D6DE1FD523E9007FBF55 /* XVideoRecord.cpp */; };
+		4F77D6E31FD537E7007FBF55 /* xdata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F77D6E11FD537E7007FBF55 /* xdata.cpp */; };
+		4FB225431FCE8C9F00239DE2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB225421FCE8C9F00239DE2 /* main.cpp */; };
+		4FB2254E1FCE8DE600239DE2 /* XMedioEncode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB2254A1FCE8DE600239DE2 /* XMedioEncode.cpp */; };
+		4FB2254F1FCE8DE600239DE2 /* XRtmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB2254C1FCE8DE600239DE2 /* XRtmp.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4FB2253D1FCE8C9F00239DE2 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		4F748AE61FCE8F2E00BAB57B /* XAudioRecord.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XAudioRecord.cpp; sourceTree = "<group>"; };
+		4F748AE71FCE8F2E00BAB57B /* XAudioRecord.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = XAudioRecord.hpp; sourceTree = "<group>"; };
+		4F77D6DE1FD523E9007FBF55 /* XVideoRecord.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XVideoRecord.cpp; sourceTree = "<group>"; };
+		4F77D6DF1FD523E9007FBF55 /* XVideoRecord.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = XVideoRecord.hpp; sourceTree = "<group>"; };
+		4F77D6E11FD537E7007FBF55 /* xdata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xdata.cpp; sourceTree = "<group>"; };
+		4F77D6E21FD537E7007FBF55 /* xdata.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xdata.hpp; sourceTree = "<group>"; };
+		4FB2253F1FCE8C9F00239DE2 /* audio_video_to_rtsp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = audio_video_to_rtsp; sourceTree = BUILT_PRODUCTS_DIR; };
+		4FB225421FCE8C9F00239DE2 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		4FB2254A1FCE8DE600239DE2 /* XMedioEncode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XMedioEncode.cpp; sourceTree = "<group>"; };
+		4FB2254B1FCE8DE600239DE2 /* XMedioEncode.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = XMedioEncode.hpp; sourceTree = "<group>"; };
+		4FB2254C1FCE8DE600239DE2 /* XRtmp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XRtmp.cpp; sourceTree = "<group>"; };
+		4FB2254D1FCE8DE600239DE2 /* XRtmp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = XRtmp.hpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4FB2253C1FCE8C9F00239DE2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4FB225361FCE8C9E00239DE2 = {
+			isa = PBXGroup;
+			children = (
+				4FB225411FCE8C9F00239DE2 /* audio_video_to_rtsp */,
+				4FB225401FCE8C9F00239DE2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4FB225401FCE8C9F00239DE2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4FB2253F1FCE8C9F00239DE2 /* audio_video_to_rtsp */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4FB225411FCE8C9F00239DE2 /* audio_video_to_rtsp */ = {
+			isa = PBXGroup;
+			children = (
+				4FB225421FCE8C9F00239DE2 /* main.cpp */,
+				4F748AE61FCE8F2E00BAB57B /* XAudioRecord.cpp */,
+				4F748AE71FCE8F2E00BAB57B /* XAudioRecord.hpp */,
+				4FB2254A1FCE8DE600239DE2 /* XMedioEncode.cpp */,
+				4FB2254B1FCE8DE600239DE2 /* XMedioEncode.hpp */,
+				4FB2254C1FCE8DE600239DE2 /* XRtmp.cpp */,
+				4FB2254D1FCE8DE600239DE2 /* XRtmp.hpp */,
+				4F77D6DE1FD523E9007FBF55 /* XVideoRecord.cpp */,
+				4F77D6DF1FD523E9007FBF55 /* XVideoRecord.hpp */,
+				4F77D6E11FD537E7007FBF55 /* xdata.cpp */,
+				4F77D6E21FD537E7007FBF55 /* xdata.hpp */,
+			);
+			path = audio_video_to_rtsp;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4FB2253E1FCE8C9F00239DE2 /* audio_video_to_rtsp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4FB225461FCE8C9F00239DE2 /* Build configuration list for PBXNativeTarget "audio_video_to_rtsp" */;
+			buildPhases = (
+				4FB2253B1FCE8C9F00239DE2 /* Sources */,
+				4FB2253C1FCE8C9F00239DE2 /* Frameworks */,
+				4FB2253D1FCE8C9F00239DE2 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = audio_video_to_rtsp;
+			productName = audio_video_to_rtsp;
+			productReference = 4FB2253F1FCE8C9F00239DE2 /* audio_video_to_rtsp */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4FB225371FCE8C9E00239DE2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0810;
+				ORGANIZATIONNAME = tangwei;
+				TargetAttributes = {
+					4FB2253E1FCE8C9F00239DE2 = {
+						CreatedOnToolsVersion = 8.1;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 4FB2253A1FCE8C9E00239DE2 /* Build configuration list for PBXProject "audio_video_to_rtsp" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 4FB225361FCE8C9E00239DE2;
+			productRefGroup = 4FB225401FCE8C9F00239DE2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4FB2253E1FCE8C9F00239DE2 /* audio_video_to_rtsp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4FB2253B1FCE8C9F00239DE2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4F77D6E01FD523E9007FBF55 /* XVideoRecord.cpp in Sources */,
+				4FB225431FCE8C9F00239DE2 /* main.cpp in Sources */,
+				4F77D6E31FD537E7007FBF55 /* xdata.cpp in Sources */,
+				4FB2254F1FCE8DE600239DE2 /* XRtmp.cpp in Sources */,
+				4F748AE81FCE8F2E00BAB57B /* XAudioRecord.cpp in Sources */,
+				4FB2254E1FCE8DE600239DE2 /* XMedioEncode.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4FB225441FCE8C9F00239DE2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		4FB225451FCE8C9F00239DE2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		4FB225471FCE8C9F00239DE2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = ../../include;
+				LD_RUNPATH_SEARCH_PATHS = /Users/tangwei/Desktop/live/lib;
+				LIBRARY_SEARCH_PATHS = ../../lib;
+				OTHER_LDFLAGS = (
+					"-lopencv_videoio",
+					"-lopencv_core",
+					"-lopencv_highgui",
+					"-lswscale",
+					"-lQt5Core",
+					"-lQt5Network",
+					"-lQt5Gui",
+					"-lswresample",
+					"-lavutil",
+					"-lQt5Multimedia",
+					"-lavcodec",
+					"-lavformat",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = ../../include;
+			};
+			name = Debug;
+		};
+		4FB225481FCE8C9F00239DE2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = ../../include;
+				LD_RUNPATH_SEARCH_PATHS = /Users/tangwei/Desktop/live/lib;
+				LIBRARY_SEARCH_PATHS = ../../lib;
+				OTHER_LDFLAGS = (
+					"-lopencv_videoio",
+					"-lopencv_core",
+					"-lopencv_highgui",
+					"-lswscale",
+					"-lQt5Core",
+					"-lQt5Network",
+					"-lQt5Gui",
+					"-lswresample",
+					"-lavutil",
+					"-lQt5Multimedia",
+					"-lavcodec",
+					"-lavformat",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = ../../include;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4FB2253A1FCE8C9E00239DE2 /* Build configuration list for PBXProject "audio_video_to_rtsp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FB225441FCE8C9F00239DE2 /* Debug */,
+				4FB225451FCE8C9F00239DE2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4FB225461FCE8C9F00239DE2 /* Build configuration list for PBXNativeTarget "audio_video_to_rtsp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FB225471FCE8C9F00239DE2 /* Debug */,
+				4FB225481FCE8C9F00239DE2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4FB225371FCE8C9E00239DE2 /* Project object */;
+}

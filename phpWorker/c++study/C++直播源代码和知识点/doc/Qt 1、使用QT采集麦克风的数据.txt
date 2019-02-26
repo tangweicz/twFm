@@ -1,0 +1,59 @@
+mac上采集麦克风的数据
+
+一、设置需要采集的音频的格式
+	QAudioFormat fmt;
+
+	fmt.setSampleRate(44100);
+
+	fmt.setChannelCount(2);
+
+	fmt.setSampleSize(16);//设置样本大小，一般为8或者16
+	
+	fmt.setSampleType(QAudioFormat::UnSignedInt);
+
+	fmt.setCodec(“audio/pcm”);
+
+	fmt.setByteOrder(QAudioFormat::LittleEndian);
+
+二、查找音频采集设备
+	QAudioDeviceInfo device = QAudioDeviceInfo::defaultInputDevice();
+
+	if(!device.isFormatSupported(fmt)){
+
+		std::cout << “设备不支持该类型的音频格式” << std:: endl;
+
+		return -1;
+
+	}
+
+三、开始采集音频：
+	QAudioInput * input = new QAudioInput(fmt);
+
+	QIODevice *io = input->start();//这儿就开启了一个线程，把采集数据被把数据扔到内存中去
+
+四、循环获取一帧一帧的音频数据
+
+	char *buf = new char[4096];
+    
+    while(true){
+
+        if(input->bytesReady() < 4096) continue;//以字节为单位返回可读取的音频数据量
+
+        int size = 0;
+
+        while(size != 4096){
+
+                int len = io->read(buf+size, 4096-size);
+
+                size += len;
+
+        }
+
+        if(size != 4096) continue;
+
+
+    }
+
+
+	如果出现QAudioInput: Unable to create an Audio Converter 这个错误，证明，音频的参数设置错误，就挨个该下看看就行
+

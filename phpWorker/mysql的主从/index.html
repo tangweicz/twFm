@@ -1,0 +1,26 @@
+1、在master上新增用户，让slave上能从master上拉数据
+        grant replication slave on *.* to 用户@"%" identified by 密码（注意all 与 *.*不能同时出现）
+
+2、配置主库，修改master上的my.cnf，内容如下：
+        server-id=1（比slave的server-id小即可）
+        log-bin=master-bin
+        log-bin-index=master-bin.index
+
+3、配置从库
+        1）修改slave上的my.cnf，内容如为：
+                server-id=2
+                replicate-do-db=xxx
+                replicate-ignore-db=xxx
+        2）运行
+                ①：change master to master_host='192.168.6.101',master_user='tangweikang',master_port=3307,master_password='tangweikang',master_log_file='master-log.000001',master_log_pos=0
+                    参数解析：
+                            master_log_file、master_log_pos一定要跟master机上一致，在master上show master status可以查看master_log_file、master_log_pos的信息;
+                ②：start slave
+
+                ③：show slave status\G。只要看到，Slave_IO_Running: Yes、Slave_SQL_Running: Yes 就证明已经安装成功了！
+
+
+
+
+
+

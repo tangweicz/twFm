@@ -1,0 +1,68 @@
+1、轮询：
+        http{
+            upstream sampleapp {
+                server xxx:80;
+                server xxx:80;
+            }
+            server{
+                listen 80;
+                ...
+                location / {
+
+                    proxy_pass http://sampleapp;
+
+                }
+            }
+        }
+2、最少连接：
+        http{
+            upstream sampleapp {
+                least_conn;
+                server xxx:80;
+                server xxx:80;
+            }
+            server{
+                listen 80;
+                ...
+                location / {
+
+                    proxy_pass http://sampleapp;
+
+                }
+            }
+        }
+
+3、IP地址哈希（前述的两种负载均衡方案中，同一客户端连续的Web请求可能会被分发到不同的后端服务器进行处理，因此如果涉及到会话Session，那么会话会比较复杂。常见的是基于数据库的会话持久化。要克服上面的难题，可以使用基于IP地址哈希的负载均衡方案。这样的话，同一客户端连续的Web请求都会被分发到同一服务器进行处理）
+        http{
+            upstream sampleapp {
+                ip_hash;
+                server xxx:80;
+                server xxx:80;
+            }
+            server{
+                listen 80;
+                ...
+                location / {
+
+                    proxy_pass http://sampleapp;
+
+                }
+            }
+        }
+
+4、基于权重的负载均衡
+        http{
+            upstream sampleapp {
+                server xxx:80 weight=3 max_fails=3 fail_timeout=15 max_conns=1000;
+                server xxx:80;
+            }
+            server{
+                listen 80;
+                ...
+                location / {
+
+                    proxy_pass http://sampleapp;
+
+                }
+            }
+        }

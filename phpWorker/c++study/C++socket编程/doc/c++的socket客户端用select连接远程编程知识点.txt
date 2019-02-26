@@ -1,0 +1,88 @@
+客户端自己创建socket
+
+sock = socket(AF_INET, SOCK_STREAM, 0);//AF_INET为指定socket的协议是tcp/ip协议，SOCK_STREAM只接受tcp的数据，具体参数也可以通过 man socket 来查看，linux下对单个进程的文件句柄数是有限制的，用ulimit -n命令可以查看。所以socket的初始化，在一个进程里面不能启动超过ulimit -n个，否则会报错。
+
+if(sock == -1){
+
+       std::cout << "创建socket失败~" << std::endl;
+
+	exit(0);
+
+}
+
+sockaddr_in tmp;
+
+tmp.sin_family = AF_INET;
+
+tmp.sin_port = htons(port);
+
+tmp.sin_addr.s_addr = inet_addr(ip);
+
+fd_set set;//什么是fd_set？下面select中要用到的参数类型
+
+                        FD_CLR(int fd,fd_set* set)；用来清除描述词组set中相关fd 的位
+
+                        FD_ISSET(int fd,fd_set *set)；用来测试描述词组set中相关fd 的位是否为真,及判断相关的fd有没有改变
+
+                        FD_SET（int fd,fd_set*set）；用来设置描述词组set中相关fd的位
+
+                        FD_ZERO（fd_set *set）； 用来清除描述词组set的全部位
+
+int flags = fcntl(sock, F_GETFL, 0);//查看当前的sock的阻塞状态
+
+flags = flags|O_NONBLOCK;//设置为非阻塞
+
+int connres = connect(sock, (sockaddr *)&tmp, sizeof(tmp));//返回值 0为成功 小于0为失败。但是如果调整为非阻塞，那么此时，返回值小于0就不一定是失败，也有可能是正在连接。
+
+if( connres < 0){//在这之前要把socket设置为非阻塞，如果连接不上，进程不会在这儿等待，而是直接返回，在下面再用select()来进行重连
+
+    if (errno != EINPROGRESS){//因为用的非阻塞去连接，如果返回EINPROGRESS，表明连接正在进行，所以，这儿返回不是正在连接，那么证明连接失败
+
+        //连接失败
+
+    }
+
+    FD_ZERO(&set);//将set文件数组置空
+
+    FD_SET(sock, &set);//将sock加入到set的文件数组中
+
+    timeval tm;
+
+    tm.tv_sec = 0;
+
+    tm.tv_usec = 5 * 1000;//设置5毫秒
+
+                                                 //因为connect之后，第一次操作只能是write()，所以下面的select，是将&set这个参数放在writefds这儿。
+
+    int selres = select(sock+1, 0, &set, 0, &tm);//阻塞在这儿等待。select是多路同步I/O，因为fs_set中可以存放多个socket的句柄，如果把timeva 设置为0 它就不再阻塞。
+
+                                                 //返回值：0，表示没有检测到状态变化。负数，error！正数，描述符已改变的个数。
+
+                                                 //参数：sock+1 固定格式，需要是目前已知的sock的值+1，是固定格式。readnfds: 指向检查读性的套接字集合的可选的指针。writefds: 指向检查可写性的套接字集合的可选的指针。exceptfds: 指向检查错误的套接字集合的可选的指针
+
+    if( selres <= 0){//select本身也是阻塞函数，如果把timeva 设置为0 它就不再阻塞.
+
+        //连接失败
+
+    }else{
+
+        if(FD_ISSET(sock, &set)){//判断句柄可写
+
+            //连接成功
+
+        }else{
+
+            //连接超时
+
+        }
+
+
+
+    }
+
+}else{
+
+    //连接成功
+
+}
+

@@ -1,0 +1,59 @@
+ffmpeg视频H264编码过程（这步之前、之后的所有的alloc的数据都需要释放空间）
+	一、在代码中添加：
+		avcodec_register_all();//注册所有的编解码器，不需要反复注册，只要注册一次，所以，一般放在代码开头。
+
+
+	一、找到编码器：
+		AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_H264)//查找到H264的解码器,需要判断如果没有找到的情况
+
+	二、创建编码器上下文，并初始化编码器：（一个视频只需要一个编码器，不需要精确到每一个视频帧）
+		
+		AVCodecContext *codecContext = NULL;
+
+		codecContext = avcodec_alloc_context3(codec);//用查找到的codec编码器去实例化编码器上下文，需要判断是否成功 avcodec_free_context(codecContext);这个是清理编码器空间
+
+	三、配置视频编码器上下文的参数：（也只需要配置一次，不需要反复配置）
+		
+		codecContext->flags = AV_CODEC_FLAG_GLOBAL_HEADER;//全局参数
+
+		codecContext->codec_id = codec->id;//上面查找到的编码器的ID号
+
+		codecContext->thread_count = 8;//编码开启的线程数量
+
+		codecContext->bit_rate = 50*1024*8;//比特率，是压缩后每秒视频的位大小 我们在这儿设置为50KB
+
+		codecContext->width = inWidth;//视频的宽度，opencv打开的cam可以得到宽度
+
+		codecContext->height = inHeight;//视频的高度，opencv打开的cam可以得到高度
+		
+		codecContext->time_base = {1, static_cast<int>(camera.get(CV_CAP_PROP_FPS))};//设置时间基
+
+		codecContext->framerate = {static_cast<int>(camera.get(CV_CAP_PROP_FPS)), 1};//设置帧率
+
+		codecContext->gop_size = 50;//画面组的大小，多少帧为一个关键帧，这值设置的越大，压缩率就越高，但是如果其中丢掉一帧，那么这个50帧的画面就GG了，这50个帧中，第一个一定是I帧，后面才是B帧和P帧。
+
+		codecContext->max_b_frames = 0;//B帧设置为0 这样上面设置的50帧中，就不会有B帧，都是I帧、P帧	
+
+		codecContext->pix_fmt = AV_PIX_FMT_YUV420P;//设置像素格式
+
+	四、打开编码器：
+		avcodec_open2(codecContext, 查找到的编码器(如果在初始化编码器上下文的时候已经指定了，即avcodec_alloc_context3(codec)，填写了这个codec，那么这儿就可以不写，如果上面没有指定，那么这儿要写), 0);//这儿需要判断是否打开成功
+
+	五、用打开的编码器去编码一个yuv的像素图片
+
+		yuv->pts = vpts + 1;//yuv的pts每次都要递增下
+
+		vpts++;
+		
+		int ret = avcodec_send_frame(codecContext(编码器), AVFrame *yuv(之前转换出的yuv数据));//如果出错，不需要打印出错，因为有一帧出错很正常
+
+	六、接收上面编码器编码完成的数据包
+
+		AVPacket packet;
+
+		memset(&packet, 0, sizeof(packet));//这一步必须要 
+
+		av_packet_unref(&packet);
+
+		avcodec_receive_packet(codecContext(编码器), &packet);//这个函数里面，每次调用都会把上一个包清空掉。
+		

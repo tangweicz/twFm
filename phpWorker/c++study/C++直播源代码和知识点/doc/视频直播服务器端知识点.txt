@@ -1,0 +1,52 @@
+一、RTMP协议：
+	1、RTMP协议占用1935端口，是工作在TCP之上的明文协议。
+	2、RTMP封装在HTTP请求中，可穿越防火墙。
+	3、RTMPS类似RTMPT，但使用的是HTTPS连接。
+
+二、直播服务器配置：
+	我们使用的直播服务器：nginx+RTMP插件。
+	1、下载nginx-rtmp的模块源码(无需编译，只要在编译nginx的时候加入到nginx中区编译) 下载地址：https://github.com/arut/nginx-rtmp-module
+	2、下载nginx的源码包，进行编译。官网地址：www.nginx.org
+					./configure --add-module=/root/nginx-rtmp-module          //对于HLS的支持，需要额外的一个模块 ./configure --add-module=/path/to/nginx-rtmp-module --add-module=/path/to/nginx-rtmp-module/hls
+					make & make install
+	3、修改nginx.conf文件以支持nginx的rtmp直播（记住是在http的外层）：
+					rtmp{
+
+						server{
+
+							listen 1935;
+	
+							chunk_size 4096;
+
+							application live{
+
+								live on;
+
+							}
+						}	
+					}
+
+	4、配置网页可以查看推流的状态
+					server{
+	
+						listen 8080;
+
+						location /stat{
+
+							rtmp_stat all;
+
+							rtmp_stat_stylesheet stat.xsl;
+						}
+
+						location /stat.xsl{
+
+							root /xxx/xxx/xxxx					
+
+						}
+
+					}				
+	4、可以拿到第二步中安装的ffmpeg来推流测试：./ffmpeg -re -i 文件 -ar 22050 -c copy -f flv rtmp://地址/live(参数有先后顺序)              //-re 表示按帧率发送（保持视频按照时间戳发送，否则视频文件将很快传输完毕）	
+
+	5、本地可以使用vlc观看直播，地址是：rtmp://IP地址/live
+三、开发使用FFMpegSDK推流，见代码
+	1、下载ffmpeg相关的文件包，进行编译。(本地需要跑起来，记得配置头文件(Xcode: Header Search Paths、User Header Search Paths)、库文件的目录(Xcode:Library Search Paths、Other Linker flag)。同时在将头文件、库文件拷贝到默认路径的时候一定要注意权限。)

@@ -1,0 +1,16 @@
+
+#include <regex>
+
+std::string patter = "^([A-Z]+) /(.*) HTTP/1";//匹配http的方式和路径参数,regex需要gcc版本大于4.9.3，具体升级参考（https://blog.csdn.net/gw85047034/article/details/52957516）
+                
+std::regex re(patter);
+
+std::smatch mas;
+                
+std::regex_search(str, mas, re);
+                
+if(mas.size() == 0) std::cout << "failed!" << std::endl;
+                                  
+std::string type = mas[1];
+                
+std::string path = mas[2];

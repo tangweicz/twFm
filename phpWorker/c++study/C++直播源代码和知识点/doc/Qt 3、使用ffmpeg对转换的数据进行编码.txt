@@ -1,0 +1,46 @@
+接上，现在采集的数据已经是AV_SAMPLE_FMT_FLTP的格式了，那么我们还需要将其转换成H264能用的格式即 AV_CODEC_ID_AAC
+
+一、注册所有的编解码器
+	avcodec_register_all()
+
+二、找到编码器
+
+	AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_AAC);
+
+三、初始化编码器上下文
+	AVCodecContext *ctx = avcodec_alloc_context3(codec);
+
+	ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+	ctx->thread_count = 8;
+
+	ctx->bit_rate = 40000;//一秒钟的比特数
+
+	ctx->sample_rate = 44100;//编码成什么样的样本率
+
+	ctx->sample_fmt = AV_SAMPLE_FMT_FLTP;
+
+	ctx->channels = 2;
+
+	ctx->channel_layout = av_get_default_channel_layout(2);
+
+四、打开编码器：
+	avcodec_open2(codec, 0, 0);
+
+五、开始循环编码
+
+	// nb_sample/sample_rate 可以得到一帧音频的秒数
+
+	pcm->pts += (nb_sample/sample_rate)*ctx->time_base.den;//计算每一帧的pts必不可少，因为如果pts大家都保持不变，那么后边的avcodec_receive_packet的时候，会报Queue input is backward in time这个错误。
+
+	avcodec_send_frame(ctx, pcm);//pcm是接上面的，转换之后的数据
+
+六、获取编码之后的一帧数据
+
+	AVPacket pkt;//这个pkt就是推流要扔出去的数据
+
+	memset(&pkt, 0, sizeof(pkt));
+
+	avcodec_receive_packet(ctx, &pkt);//这个pkt就是推流要扔出去的数据,注意这儿不要判断是否成功！！！！
+
+	std::cout << pkt.size << std::endl;

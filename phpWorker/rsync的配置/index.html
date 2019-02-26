@@ -1,0 +1,68 @@
+一、rsync的手动触发式的主、备服务器配置
+        原理：主机启动rsync的服务进程，占用873端口，备机手动运行命令从主机上宕取文件到备机
+
+        配置：
+            1、主机：
+                    1）安装rsync的服务
+                    2）配置rsync的服务配置文件：
+                            大致内容为：
+                                        uid = 0
+                                        gid = 0
+                                        [模块名如 quanyang]
+                                            auth users = tangwei
+                                            secrets file = /用户名及密码文件的路径
+                                            path = 被录取的文件的路径
+                    3）添加系统用户，必须与auth users中的参数值一致
+                    4）添加配置文件，文件名必须与secrets file文件保持一致，内容为：用户名（跟auth users一致）:密码，注意把文件的权限改为600
+                    5）启动rsync的服务，rsync --daemon
+            2、备机：
+                    1）安装rsync的服务
+                    2）创建密码文件，密码与主机的密码一致，只要写入密码即可，注意把文件权限改为600
+                    3）运行命令拉取文件，rsync -avz tangwei@主机IP::模块 /保存路径 --password-file=密码文件路径
+
+二、rsync+inotify-tools实现实时同步
+        原理：备机启动rsync的服务进程，占用873端口，主机利用inotify-tools监听文件，如果一有改动会立马把文件推送到备机
+
+        配置：
+
+            1、主机：
+                    1）安装rsync和inotify-tools
+                    2）创建密码文件，密码与被机的密码一致，只要写入密码即可，注意把文件权限改为600
+                    3）编写inodify-toole和rsync的sh脚本，内容如下：
+
+                                    #!/bin/bash
+                                    SRC='本机要备份的文件路径'
+                                    DST='备机rsync用户名@备机IP地址::备机模块'
+                                    /usr/bin/inotifywait -mrq --timefmt '%y-%m-%d %H:%M' --format '%T %w %f %e' -e create,delete,move,modify $SRC|while read files
+                                    do
+                                    rsync -avzP --password-file=密码文件路径 --delete $SRC $DST
+                                    echo "$files was rsynced.">> /tmp/rsync.log
+                                    done
+            2、备机：
+                    1）安装rsync的服务
+                    2）配置rsync的服务配置文件：
+                            大致内容为：
+                                        uid = 0
+                                        gid = 0
+                                        [模块名如 quanyang]
+                                        read only = no
+                                        auth users = tangwei
+                                        secrets file = /用户名及密码文件的路径
+                                        path = 被录取的文件的路径
+                    3）添加系统用户，必须与auth users中的参数值一致
+                    4）添加配置文件，文件名必须与secrets file文件保持一致，内容为：用户名（跟auth users一致）:密码，注意把文件的权限改为600
+                    5）启动rsync的服务，rsync --daemon
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,10 @@
+
+
+
+cv::Mat img = cv::imread(“xxxxxxx”);
+
+cv::namedWindow(“window”);
+
+cv::imshow(“window”, img);
+
+waitKey(0);

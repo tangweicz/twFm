@@ -1,0 +1,218 @@
+
+signal(SIGPIPE, SIG_IGN);	//因为我们用的是HTTP/1.1的协议，默认是长连接，客户端在连接上之后不断开，不发RST包，不四次握手。
+                              那么服务端如果close掉了这个socket，该socket会进入TIME_WAIT状态，然后会向客户端发送一个ACK段信息，客户端recv到ACK后，正常情况下是自己的状态变为CLOSE状态。
+                              此时，客户端知道服务端已经不能读写数据了，但是仍然可以往该socket中写入数据，而写入数据（send）只是将数据放入输入缓冲区就直接返回了，所以不会出错。
+                              TCP协议会将数据发送到服务端，但是，服务端已经不能够再次接受发送数据了，就给客户端发送一个RST信号（连接重置信号），而这个RST信号被记录在了客户端的TCP协议层中。
+                              此时，客户端再次调用send时，TCP此时已经是RST状态了，因此不会将数据发出去，而是给服务端发送一个SIGPIPE的结束进程的信号。
+                              其实讲白点，就是，一端已经关闭，对端连续发出2次数据到关闭的一端，第二次就是发出的这个信号，导致整个进程退出。
+                              这儿就要忽略这个信号。
+
+                            //signal() 函数是捕获
+
+                            //SIGPIPE SIGPIPE是终止进程，向一个没有读进程的管道写数据会出现该信号
+				
+				            //TIME_WAIT状态，服务端主动关闭连接，会进入该状态，以等待最后一个ACK信号，等待时间为4分钟，如果超时没有ACK信号则正式关闭socket。
+
+				            //CLOSE_WAIT状态，服务端被动关闭连接，会进入该状态，在收到客户端发送的FIN信号后，会关闭，如果这期间程序一直在I/O操作，那么该socket会一直存在。
+
+				            //SIG_IGN 是忽略信号的处理程序
+
+sock = socket(AF_INET, SOCK_STREAM, 0);//AF_INET为指定socket的协议是tcp/ip协议，SOCK_STREAM只接受tcp的数据，具体参数也可以通过 man socket 来查看，linux下对单个进程的文件句柄数是有限制的，用ulimit -n命令可以查看。所以socket的初始化，在一个进程里面不能启动超过ulimit -n个，否则会报错。
+
+if(sock == -1){
+        
+       std::cout << "创建socket失败~" << std::endl;
+
+	exit(0);
+        
+}
+
+sockaddr_in tmp;
+    
+tmp.sin_family = AF_INET;
+    
+tmp.sin_port = htons(port);//这儿有个网络字节序的概念。不同的操作系统、平台，针对数据存储的字节序是有不同的，大致分为，小端法和大端法，比如 整型 2 二进制的顺序为00000000 00000000 00000000 00000010 在大端法上的字节序为0x187 0x186 0x185 0x184： 在小端法上的表示为：0x184 0x185 0x186 0x187,如果搞混的话 后果很严重。我们平常的电脑都是小端字节序，而网络字节序全部为大端序列。
+    
+tmp.sin_addr.s_addr = htonl(0);//内网 外网都可以访问
+    
+int BindRes = bind(sock, (sockaddr *)&tmp, sizeof(tmp));//这儿bind内部使用的是，sockaddr这个结构体，但是它存在一定的弊端，所以我们这儿改用sockaddr_in，需要先引用
+
+int listenRes = listen(sock, 10);//开始接受用户的连接,10是指最大连接数，具体含义为，如果有10个连接有数据传输，但是都没有用accept来接收数据，那么第11个进来，前面的第一个连接的数据就会被丢掉。如果被accept了，那么这里面的数字就会减一 那么就是9了。
+
+if(listenRes == -1)return false;
+    
+int flags = fcntl(sock, F_GETFL, 0);//查看当前sock的阻塞状态.什么是阻塞？
+
+                                    //比如说read()如果此时buff()里面有5bytes的数据，而我们要read（）10bytes的数据对于block：那么只有等到buff里面有10bytes的数据read（）才返回，不管多长时间都要等待。对于nonblock：马上返回5bytes的字节。如果buff()中无数据，非阻塞，read（）在没有接收到数据时会立即返回0，阻塞read()在没有接收到数据时会阻塞一段时间，时间过后还没有收到会返回一个值
+
+                                    //比如说connect()如果是阻塞，那么会等待连接，直到连接超时，返回结果。非阻塞，不会去等待，就直接返回。
+    
+if(flags < 0)return false;//返回 -1 表示 错误
+    
+if(isblock){//如果设置为阻塞，即传值为true
+        
+    flags = flags&~O_NONBLOCK;
+
+}else{//如果设置为非阻塞，即传值为false
+    
+    flags = flags|O_NONBLOCK;
+        
+}
+    
+fcntlRes = fcntl(sock, F_SETFL, flags);//设置阻塞还是非阻塞，在使用poll处理的时候，一般设置为非阻塞。
+
+int epfd = epoll_create(256);//创建一个epoll，里面能放256个套接字。mac os上不存在epoll。
+    
+epoll_event ev;
+    
+ev.data.fd = sock;
+    
+ev.events = EPOLLIN|EPOLLET;//设置时间触发模式！！！！很重要
+
+                            //EPOLLET是边缘模式，（只支持非阻塞模式）效率非常高。该模式下，同时有两个连接进来只会触发一次事件返回，不管有没有操作，之后不会再次提醒（即2次连接会被记录到下面的events数组当中的同一个下标中去）、有数据可供读取的句柄中，在下一次有数据之前，该模式下也只会返回一次。所以在连接、读取数据的时候都需要循环。
+
+                            //EPOLLLT是水平模式，（支持阻塞和非阻塞）效率非常低。该模式下，对已连接或者是有数据可以读取的句柄，用户没有操作，在epoll_wait中会反复返回给用户，让用户对其操作。
+
+                            //EPOLLIN 表示有数据连接或有数据来临可供读取。
+
+epoll_ctl(epfd, EPOLL_CTL_ADD, sock, &ev);//将server.sock这个fd添加到epfd这个epoll中去，触发条件是：当前sock可读（就是有返回值 比如 有新的连接需要accept、 有数据需要recv(...) ）、对端关闭socket。
+    
+epoll_event events[20];//表示等待20个事件
+
+while(true){
+
+	int num = epoll_wait(epfd, events, sizeof(events), 500);//events为上面定义的，表示等待20个事件或者500毫秒，超过20个事件或500毫秒就会往下走，而不会一直阻塞。返回产生socket的数量、具体产生的socket存放在events中
+
+	if(num <= 0)continue;
+
+	for(int i = 0;i < num; i++){
+
+		if(events[i].data.fd == sock){//如果连接进来的socket句柄跟原句柄一致，那么证明是连接操作
+
+		    while(true){//因为socket此时是非阻塞的，并发压力下，每次只会取到第一个连接，所以如果恰逢多个连接同时触发连接事件，在返回的events数组中提现不出来，会出现丢失事件的现象。印证上面的EPOLLIN参数的设置。所以这儿使用循环来获取连接。
+
+                sockaddr_in tmpSock;
+
+                socklen_t len = sizeof(tmpSock);//因为accept之后，第一步只能是read()。
+
+                int childSock = accept(sock, (sockaddr *)& tmpSock, &len);//如果accept成功，那么会返回一个新的socket，这个socket就是用来跟连上来的客户端进行通信的。在阻塞的情况下，2个同时进来系统默认只接收一个，所以，这儿只能用非阻塞的方式
+
+                if(childSock < 0)break;//如果有连接失败的，这儿退出循环
+
+                ev.data.fd = childSock;
+
+                ev.events = EPOLLIN|EPOLLET;
+
+                epoll_ctl(epfd, EPOLL_CTL_ADD, childSock, &ev);//将新连接上来的socket放到poll中
+
+			}
+
+		}else{//连接上来了之后的操作
+
+            char bufres[10240] = {0};
+
+            int tmpSocket = events[i].data.fd;
+
+            tmpSocket.SetBlock(false);//设置为非阻塞，仅针对接下来的recv数据。因为我们不是一次性接收用户的数据，我们是循环接收，所以不管收到多少，我们都可以返回，拼接到一个大的结果里面，所以不需要阻塞。
+
+            std::cout << "写入的" << tmpSocket << std::endl;
+
+            while(true){//循环接收用户的数据
+
+                char buf[1024] = {0};
+
+                long recvLen = recv(tmpSocket, buf, sizeof(buf)-1, 0);//获取到数据的大小，字节。另一端已关闭则返回0。失败返回-1。
+
+                if(recvSize == -1){//如果接收出错，关闭连接。只有在(errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN)的情况下认为连接是正常的，可以继续接收。但是我们这儿是循环接收数据，一般出现EINTR、EWOULDBLOCK、EAGAIN是已经没有数据了，就可以跳出循环了。
+
+                    if(errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN){//发送数据，跳出循环
+
+
+
+                    }else{//关闭连接，跳出循环
+
+                        epoll_ctl(epfd, EPOLL_CTL_DEL, clientTmp.sock, &ev);//将句柄从epoll中删除
+
+                        clientTmp.xclose();
+
+                        canSendData = false;
+
+                        break;
+
+                    }
+
+
+                }else if(recvSize == 0){//客户端主动关闭连接，我们会接收到0,我们要主动关闭这个连接
+
+                    epoll_ctl(epfd, EPOLL_CTL_DEL, clientTmp.sock, &ev);//将句柄从epoll中删除
+
+                    clientTmp.xclose();
+
+                    canSendData = false;
+
+                    std::cout << "socket已经被关闭" << std::endl;
+
+                    break;
+
+                }else{//正常连接
+
+                    strcat(strStr, strTmp);
+
+                    std::cout << strlen(strStr) << std::endl;
+
+                    canSendData = true;
+
+                }
+            }
+
+            tmpSocket.SetBlock(true);//为下面发送数据做准备，发送数据必须是阻塞的。因为，如果没有发送完毕，是不能直接返回的，需要等待
+
+            std::string str = bufres;
+
+			//这儿下面就开始拿到数据，可以开始处理
+
+			epoll_ctl(epfd, EPOLL_CTL_DEL, tmpSocket, &ev);//将句柄从epoll中删除
+                
+            close(tmpSocket);//当建立一个socket连接后，它是以文件描述符的形式在程序发挥作用
+
+
+
+		}
+
+
+	}
+
+}
+
+
+
+附：
+
+    socket的HTTP连接的三次握手：
+
+                            主动连接端，发送SYN包到被连接端，自己的状态变为SYN_SEND状态
+
+                            被连接段，接收到syn包，并发送SYN+ACK的包到连接段，自己的状态变为SYN_REVD状态
+
+                            主动连接段接收到SYN+ACK的包，并像被动连接段发送ACK包，更改两端的状态为ESTABLISHED。
+
+    socket的HTTP释放的四次挥手：
+
+                            主动关闭端先发送FIN，进入FIN_WAIT1状态
+
+                            被动关闭端收到FIN，发送ACK，进入CLOSE_WAIT状态，主动关闭端收到这个ACK，进入FIN_WAIT2状态
+
+                            被动关闭端发送FIN，进入LAST_ACK状态
+
+                            主动关闭端端收到FIN，发送ACK，进入TIME_WAIT状态，被动关闭端收到ACK，进入CLOSE状态
+
+                            主动关闭端TIME_WAIT持续2倍MSL时长，在linux体系中大概是60s，转换成CLOSE状态
+
+
+
+
+
+
+
+
+
