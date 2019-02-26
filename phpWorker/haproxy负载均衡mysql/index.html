@@ -1,8 +1,0 @@
-listen  proxy-mysql 0.0.0.0:23306 #代理的端口。我们程序连接从库集群时就访问这个端口。
-    mode tcp
-    balance roundrobin
-    option tcplog
-    option mysql-check user haproxy #这里是配置健康检查的，也是haproxy自带的功能,需要在mysql中创建无任何权限用户haproxy，且无密码
-    server MySQL1 192.168.1.191:3306 check weight 1 maxconn 2000 #配置MySQL从库节点，有多少配置多少就行了。
-    server MySQL2 192.168.1.192:3306 check weight 1 maxconn 2000 #配置MySQL从库节点，有多少配置多少就行了。
-    option tcpka

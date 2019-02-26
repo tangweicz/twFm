@@ -1,9 +1,0 @@
-1、读取文件，按特定分隔符分隔，并打印出东西 cat /etc/passwd | awk -F ':' '{print $1"\t"$7}'
-
-2、读取文件，按特定分隔符分隔，并打印出东西，规定头尾 cat /etc/passwd | awk -F ':' 'BEGIN {print "user\tsh"} {print $1"\t"$7} END {print "tangwei\thaha"}'
-
-3、读取文件，正则匹配到符合要求的行 cat /etc/passwd | awk '/root/'
-
-4、读取文件，按特定分隔符分隔，按规定格式打印 cat /etc/passwd | awk -F ':' '{printf("%s\t%s", $1,$7)}'
-
-5、使用自定义变量 cat /etc/passwd | awk -F ':' '{count++;printf("%s\t%s\r\n", $1,$7)} END {print count }'

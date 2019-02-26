@@ -1,2 +1,0 @@
-BIN=
-include ../Makefile.mk

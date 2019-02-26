@@ -1,7 +1,0 @@
-
-add_library(Qt5::QCounterGesturePlugin MODULE IMPORTED)
-
-_populate_Sensors_plugin_properties(QCounterGesturePlugin RELEASE "sensorgestures/libqtsensorgestures_counterplugin.dylib")
-_populate_Sensors_plugin_properties(QCounterGesturePlugin DEBUG "sensorgestures/libqtsensorgestures_counterplugin.dylib")
-
-list(APPEND Qt5Sensors_PLUGINS Qt5::QCounterGesturePlugin)
