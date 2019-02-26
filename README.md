@@ -1,6 +1,6 @@
 # twFm
-Php rapid development framework built with composer \r
-部署到本地，根目录指到Public中。\r
+Php rapid development framework built with composer 
+部署到本地，根目录指到Public中。
 Config目录中：Config.php为配置文件，数据库连接配置在这儿。Route.php为访问路径文件，所有的路由配置在这儿。
 Controllers目录中：各个逻辑层的代码
 Libs目录中：所有的工具类
