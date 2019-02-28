@@ -73,6 +73,11 @@ class CurlRequest implements HttpRequest {
 
 		$this->options[$name] = $value;
 
+		// Internal ONOI options are not further relayed
+		if ( strpos( $name, 'ONOI_HTTP_REQUEST' ) !== false ) {
+			return;
+		}
+
 		curl_setopt(
 			$this->handle,
 			$name,

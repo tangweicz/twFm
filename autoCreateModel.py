@@ -144,7 +144,7 @@ for row in results:#循环出所有的表名
         zhushiStr = "    /**\r     * User: tangwei\r     * Date: "+time.strftime('%Y.%m.%d',time.localtime(time.time()))+"\r     * @param {params}\r     * @return\r     * Function:{usage}\r     */\r"#注释文本
         addStr = zhushiStr.format(params="", usage="新增一条记录")+"    public function addOne()"
         if phpVersion == 7:
-            addStr += " : int "
+            addStr += " : array "
         addStr +="\r    {\r"
         columnStr = ""
         questionStr = ""
@@ -166,12 +166,15 @@ for row in results:#循环出所有的表名
         addStr = zhushiStr.format(params="", usage="测试新增一条记录") + "    public function testaddOne()\r    {\r"
         addStr += "        $model = new "+modelFileName[0:-4]+"();\r"
         for column in tableColumnList:
-            if column["type"] == "int":  # 如果字段是int类型：
-                addStr += "        $model->"+column["name"]+" = 10;\r"
-            elif column["type"] == "datetime":
-                addStr += "        $model->" + column["name"] + " = \"2019-02-12\";\r"
+            if "delete" in column["name"].lower():
+                addStr += "        $model->" + column["name"] + " = 0;\r"
             else:
-                addStr += "        $model->"+column["name"]+" = \"xxxx\";\r"
+                if column["type"] == "int":  # 如果字段是int类型：
+                    addStr += "        $model->"+column["name"]+" = 10;\r"
+                elif column["type"] == "datetime":
+                    addStr += "        $model->" + column["name"] + " = \"2019-02-12\";\r"
+                else:
+                    addStr += "        $model->"+column["name"]+" = \"xxxx\";\r"
         addStr += "        $res = $model->addOne();\r"
         addStr += "        var_dump($res);\r"
         addStr += "        #./vendor/bin/phpunit --filter testaddOne ./test/"+modelTestFileName
@@ -183,7 +186,7 @@ for row in results:#循环出所有的表名
         #delete from xxx where id = xx
         deleteStr = zhushiStr.format(params="", usage="删除记录的方法，不进回收站，直接删数据库的记录")+"    public function deleteOne()"
         if phpVersion == 7:
-            deleteStr += " : int "
+            deleteStr += " : array "
         deleteStr += "\r    {\r"
         deleteStr += "        $sql = \"DELETE FROM \".self::$table.\" WHERE `id` = ?\";\r"
         deleteStr += "        $sqlParam = array($this->id);\r"
@@ -192,7 +195,8 @@ for row in results:#循环出所有的表名
         fd.write(deleteStr)
         #phpunit测试delete方法祥光代码
         deleteStr = zhushiStr.format(params="", usage="测试删除记录的方法，不进回收站，直接删数据库的记录") + "    public function testdeleteOne()\r    {\r"
-        deleteStr += "        $record = "+modelFileName[0:-4]+"::getOneById(25);\r"
+        deleteStr += "        $record = "+modelFileName[0:-4]+"::getOneById(10);\r"
+        deleteStr += "        if(empty($record)){\r            echo \"搜索无数据\";\r            exit;\r}"
         deleteStr += "        $record = $record[0];\r"
         deleteStr += "        $res = $record->deleteOne();\r"
         deleteStr += "        var_dump($res);\r"
@@ -226,7 +230,7 @@ for row in results:#循环出所有的表名
                     fd.write(tmpGetStr)
                     # phpunit测试获取一条不在回收站内的数据
                     deleteStr = zhushiStr.format(params="", usage="获取一条不在回收站内的数据") + "    public function testgetOneUndeletedBy" + column["name"].capitalize() + "()\r    {\r"
-                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneUndeletedBy" + column["name"].capitalize() + "(\"xxxx\");\r"
+                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneUndeletedBy" + column["name"].capitalize() + "(10);\r"
                     deleteStr += "        var_dump($record);\r"
                     deleteStr += "        #./vendor/bin/phpunit --filter testgetOneUndeletedBy" + column["name"].capitalize() + " ./test/" + modelTestFileName
                     deleteStr += "\r    }\r"
@@ -245,7 +249,7 @@ for row in results:#循环出所有的表名
                     fd.write(tmpGetStr)
                     # phpunit测试获取一条在回收站内的数据
                     deleteStr = zhushiStr.format(params="", usage="获取一条在回收站内的数据") + "    public function testgetOneDeletedBy" + column["name"].capitalize() + "()\r    {\r"
-                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneDeletedBy" + column["name"].capitalize() + "(\"xxxx\");\r"
+                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneDeletedBy" + column["name"].capitalize() + "(10);\r"
                     deleteStr += "        var_dump($record);\r"
                     deleteStr += "        #./vendor/bin/phpunit --filter testgetOneDeletedBy" + column["name"].capitalize() + " ./test/" + modelTestFileName
                     deleteStr += "\r    }\r"
@@ -263,7 +267,7 @@ for row in results:#循环出所有的表名
                     fd.write(tmpGetStr)
                     #phpunit测试不带分页获取所有的不在回收站内的数据
                     deleteStr = zhushiStr.format(params="", usage="测试不带分页获取所有的不在回收站内的数据") + "    public function testgetAllUndeletedBy"+column["name"].capitalize()+"WithOutLimit()\r    {\r"
-                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllUndeletedBy"+column["name"].capitalize()+"WithOutLimit(\"xxxx\");\r"
+                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllUndeletedBy"+column["name"].capitalize()+"WithOutLimit(10);\r"
                     deleteStr += "        var_dump($record);\r"
                     deleteStr += "        #./vendor/bin/phpunit --filter testgetAllUndeletedBy"+column["name"].capitalize()+"WithOutLimit ./test/" + modelTestFileName
                     deleteStr += "\r    }\r"
@@ -283,7 +287,7 @@ for row in results:#循环出所有的表名
                     fd.write(tmpGetStr)
                     #phpunit测试带分页获取所有的不在回收站内的数据
                     deleteStr = zhushiStr.format(params="", usage="测试带分页获取所有的不在回收站内的数据") + "    public function testgetAllUndeletedBy" + column["name"].capitalize() + "WithLimit()\r    {\r"
-                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllUndeletedBy" + column["name"].capitalize() + "WithLimit(\"xxxx\", \"limit 0,1\");\r"
+                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllUndeletedBy" + column["name"].capitalize() + "WithLimit(10, \"limit 0,1\");\r"
                     deleteStr += "        var_dump($record);\r"
                     deleteStr += "        #./vendor/bin/phpunit --filter testgetAllUndeletedBy" + column["name"].capitalize() + "WithLimit ./test/" + modelTestFileName
                     deleteStr += "\r    }\r"
@@ -302,7 +306,7 @@ for row in results:#循环出所有的表名
                     fd.write(tmpGetStr)
                     #phpunit测试不带分页获取所有的在回收站内的数据
                     deleteStr = zhushiStr.format(params="", usage="测试带分页获取所有的不在回收站内的数据") + "    public function testgetAllDeletedBy" + column["name"].capitalize() + "WithOutLimit()\r    {\r"
-                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllDeletedBy" + column["name"].capitalize() + "WithOutLimit(\"xxxx\");\r"
+                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllDeletedBy" + column["name"].capitalize() + "WithOutLimit(10);\r"
                     deleteStr += "        var_dump($record);\r"
                     deleteStr += "        #./vendor/bin/phpunit --filter testgetAllDeletedBy" + column["name"].capitalize() + "WithOutLimit ./test/" + modelTestFileName
                     deleteStr += "\r    }\r"
@@ -321,7 +325,7 @@ for row in results:#循环出所有的表名
                     fd.write(tmpGetStr)
                     #phpunit测试带分页获取所有的在回收站内的数据
                     deleteStr = zhushiStr.format(params="", usage="测试带分页获取所有的不在回收站内的数据") + "    public function testgetAllDeletedBy" + column["name"].capitalize() + "WithLimit()\r    {\r"
-                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllDeletedBy" + column["name"].capitalize() + "WithLimit(\"xxxx\", \"limit 0,1\");\r"
+                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllDeletedBy" + column["name"].capitalize() + "WithLimit(10, \"limit 0,1\");\r"
                     deleteStr += "        var_dump($record);\r"
                     deleteStr += "        #./vendor/bin/phpunit --filter testgetAllDeletedBy" + column["name"].capitalize() + "WithLimit ./test/" + modelTestFileName
                     deleteStr += "\r    }\r"
@@ -340,7 +344,7 @@ for row in results:#循环出所有的表名
                     fd.write(tmpGetStr)
                     #phpunit测试不带分页获取所有的数据
                     deleteStr = zhushiStr.format(params="", usage="测试带分页获取所有的不在回收站内的数据") + "    public function testgetAllBy" + column["name"].capitalize() + "WithOutLimit()\r    {\r"
-                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllBy" + column["name"].capitalize() + "WithOutLimit(\"xxxx\");\r"
+                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllBy" + column["name"].capitalize() + "WithOutLimit(10);\r"
                     deleteStr += "        var_dump($record);\r"
                     deleteStr += "        #./vendor/bin/phpunit --filter testgetAllBy" + column["name"].capitalize() + "WithOutLimit ./test/" + modelTestFileName
                     deleteStr += "\r    }\r"
@@ -359,7 +363,7 @@ for row in results:#循环出所有的表名
                     fd.write(tmpGetStr)
                     #phpunit测试带分页获取所有的数据
                     deleteStr = zhushiStr.format(params="", usage="测试带分页获取所有的不在回收站内的数据") + "    public function testgetAllBy" + column["name"].capitalize() + "WithLimit()\r    {\r"
-                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllBy" + column["name"].capitalize() + "WithLimit(\"xxxx\", \"limit 0,1\");\r"
+                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllBy" + column["name"].capitalize() + "WithLimit(10, \"limit 0,1\");\r"
                     deleteStr += "        var_dump($record);\r"
                     deleteStr += "        #./vendor/bin/phpunit --filter testgetAllBy" + column["name"].capitalize() + "WithLimit ./test/" + modelTestFileName
                     deleteStr += "\r    }\r"
@@ -377,7 +381,7 @@ for row in results:#循环出所有的表名
                     fd.write(tmpGetStr)
                     # phpunit测试获取一条数据
                     deleteStr = zhushiStr.format(params="", usage="获取一条数据") + "    public function testgetOneBy" + column["name"].capitalize() + "()\r    {\r"
-                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneBy" + column["name"].capitalize() + "(\"xxxx\");\r"
+                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneBy" + column["name"].capitalize() + "(10);\r"
                     deleteStr += "        var_dump($record);\r"
                     deleteStr += "        #./vendor/bin/phpunit --filter testgetOneBy" + column["name"].capitalize() + " ./test/" + modelTestFileName
                     deleteStr += "\r    }\r"
@@ -396,11 +400,13 @@ for row in results:#循环出所有的表名
                     itemSqlStr = ""
                     itemThisStr = ""
                     itemAssertStr = ""
+                    findNumStr = ""
                     for item in tmpCom:#因为list中每个元素中都是一个tuple，所以还要循环
                         itemThisStr += item.capitalize()+"And"
                         itemStr += "$"+item+", "
                         itemSqlStr += item+" = ? AND "
                         itemAssertStr += "        assert(is_numeric($"+item+") && $"+item+" > 0);\r"
+                        findNumStr += "10, "
                     if hasIsDeleted:
 
                         getAllStr = zhushiStr.format(params="", usage="根据" + itemStr[0:-2] + "获取一条没被删除的数据") + "    public static function getOneUndeletedBy" + itemThisStr[0:-3] + "(" + itemStr[0:-2] + ")"
@@ -415,7 +421,7 @@ for row in results:#循环出所有的表名
                         fd.write(getAllStr)
                         # phpunit测试测试获取一条没被删除的数据
                         deleteStr = zhushiStr.format(params="", usage="测试获取一条没被删除的数据") + "    public function testgetOneUndeletedBy" + itemThisStr[0:-3] + "()\r    {\r"
-                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneUndeletedBy" + itemThisStr[0:-3] + "(\"xxxx\");\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneUndeletedBy" + itemThisStr[0:-3] + "("+findNumStr[0:-2]+");\r"
                         deleteStr += "        var_dump($record);\r"
                         deleteStr += "        #./vendor/bin/phpunit --filter testgetOneUndeletedBy" + itemThisStr[0:-3] + " ./test/" + modelTestFileName
                         deleteStr += "\r    }\r"
@@ -434,7 +440,7 @@ for row in results:#循环出所有的表名
                         fd.write(getAllStr)
                         # phpunit测试测试获取一条被删除的数据
                         deleteStr = zhushiStr.format(params="", usage="测试获取一条被删除的数据") + "    public function testgetOneDeletedBy" + itemThisStr[0:-3] + "()\r    {\r"
-                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneDeletedBy" + itemThisStr[0:-3] + "(\"xxxx\");\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneDeletedBy" + itemThisStr[0:-3] + "("+findNumStr[0:-2]+");\r"
                         deleteStr += "        var_dump($record);\r"
                         deleteStr += "        #./vendor/bin/phpunit --filter testgetOneDeletedBy" + itemThisStr[0:-3] + " ./test/" + modelTestFileName
                         deleteStr += "\r    }\r"
@@ -453,7 +459,7 @@ for row in results:#循环出所有的表名
                         fd.write(getAllStr)
                         #phpunit测试不带limit的获取所有的没被删除的数据
                         deleteStr = zhushiStr.format(params="", usage="测试不带limit的获取所有的没被删除的数据") + "    public function testgetAllUndeletedBy"+itemThisStr[0:-3]+"WithOutLimit()\r    {\r"
-                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllUndeletedBy"+itemThisStr[0:-3]+"WithOutLimit(\"xxxx\");\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllUndeletedBy"+itemThisStr[0:-3]+"WithOutLimit("+findNumStr[0:-2]+");\r"
                         deleteStr += "        var_dump($record);\r"
                         deleteStr += "        #./vendor/bin/phpunit --filter testgetAllUndeletedBy"+itemThisStr[0:-3]+"WithOutLimit ./test/" + modelTestFileName
                         deleteStr += "\r    }\r"
@@ -472,7 +478,7 @@ for row in results:#循环出所有的表名
                         fd.write(getAllStr)
                         #phpunit测试不带limit的获取所有的被删除的数据
                         deleteStr = zhushiStr.format(params="", usage="测试不带limit的获取所有的没被删除的数据") + "    public function testgetAllDeletedBy" + itemThisStr[0:-3] + "WithOutLimit()\r    {\r"
-                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllDeletedBy" + itemThisStr[0:-3] + "WithOutLimit(\"xxxx\");\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllDeletedBy" + itemThisStr[0:-3] + "WithOutLimit("+findNumStr[0:-2]+");\r"
                         deleteStr += "        var_dump($record);\r"
                         deleteStr += "        #./vendor/bin/phpunit --filter testgetAllDeletedBy" + itemThisStr[0:-3] + "WithOutLimit ./test/" + modelTestFileName
                         deleteStr += "\r    }\r"
@@ -492,7 +498,7 @@ for row in results:#循环出所有的表名
                         fd.write(getAllStr)
                         #phpunit测试带limit的获取所有的没被删除的数据
                         deleteStr = zhushiStr.format(params="", usage="测试带limit的获取所有的没被删除的数据") + "    public function testgetAllUndeletedBy" + itemThisStr[0:-3] + "WithLimit()\r    {\r"
-                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllUndeletedBy" + itemThisStr[0:-3] + "WithLimit(\"xxxx\", \"limit 0,1\");\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllUndeletedBy" + itemThisStr[0:-3] + "WithLimit("+findNumStr[0:-2]+", \"limit 0,1\");\r"
                         deleteStr += "        var_dump($record);\r"
                         deleteStr += "        #./vendor/bin/phpunit --filter testgetAllUndeletedBy" + itemThisStr[0:-3] + "WithLimit ./test/" + modelTestFileName
                         deleteStr += "\r    }\r"
@@ -512,7 +518,7 @@ for row in results:#循环出所有的表名
                         fd.write(getAllStr)
                         #phpunit测试带limit的获取所有的被删除的数据
                         deleteStr = zhushiStr.format(params="", usage="测试带limit的获取所有的没被删除的数据") + "    public function testgetAllDeletedBy" + itemThisStr[0:-3] + "WithLimit()\r    {\r"
-                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllDeletedBy" + itemThisStr[0:-3] + "WithLimit(\"xxxx\", \"limit 0,1\");\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllDeletedBy" + itemThisStr[0:-3] + "WithLimit("+findNumStr[0:-2]+", \"limit 0,1\");\r"
                         deleteStr += "        var_dump($record);\r"
                         deleteStr += "        #./vendor/bin/phpunit --filter testgetAllDeletedBy" + itemThisStr[0:-3] + "WithLimit ./test/" + modelTestFileName
                         deleteStr += "\r    }\r"
@@ -532,7 +538,7 @@ for row in results:#循环出所有的表名
                         fd.write(getAllStr)
                         #phpunit测试不带limit的获取所有的数据
                         deleteStr = zhushiStr.format(params="", usage="测试带limit的获取所有的没被删除的数据") + "    public function testgetAllBy" + itemThisStr[0:-3] + "WithOutLimit()\r    {\r"
-                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllBy" + itemThisStr[0:-3] + "WithOutLimit(\"xxxx\");\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllBy" + itemThisStr[0:-3] + "WithOutLimit("+findNumStr[0:-2]+");\r"
                         deleteStr += "        var_dump($record);\r"
                         deleteStr += "        #./vendor/bin/phpunit --filter testgetAllBy" + itemThisStr[0:-3] + "WithOutLimit ./test/" + modelTestFileName
                         deleteStr += "\r    }\r"
@@ -552,7 +558,7 @@ for row in results:#循环出所有的表名
                         fd.write(getAllStr)
                         #phpunit测试带limit的获取所有的数据
                         deleteStr = zhushiStr.format(params="", usage="测试带limit的获取所有的没被删除的数据") + "    public function testgetAllBy" + itemThisStr[0:-3] + "WithLimit()\r    {\r"
-                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllBy" + itemThisStr[0:-3] + "WithLimit(\"xxxx\", \"limit 0,1\");\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllBy" + itemThisStr[0:-3] + "WithLimit("+findNumStr[0:-2]+", \"limit 0,1\");\r"
                         deleteStr += "        var_dump($record);\r"
                         deleteStr += "        #./vendor/bin/phpunit --filter testgetAllBy" + itemThisStr[0:-3] + "WithLimit ./test/" + modelTestFileName
                         deleteStr += "\r    }\r"
@@ -571,7 +577,7 @@ for row in results:#循环出所有的表名
                         fd.write(getAllStr)
                         # phpunit测试不带limit的获取所有的数据
                         deleteStr = zhushiStr.format(params="", usage="测试获取一条数据") + "    public function testgetOneBy" + itemThisStr[0:-3] + "()\r    {\r"
-                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneBy" + itemThisStr[0:-3] + "(\"xxxx\");\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneBy" + itemThisStr[0:-3] + "("+findNumStr[0:-2]+");\r"
                         deleteStr += "        var_dump($record);\r"
                         deleteStr += "        #./vendor/bin/phpunit --filter testgetOneBy" + itemThisStr[0:-3] + " ./test/" + modelTestFileName
                         deleteStr += "\r    }\r"
@@ -673,6 +679,7 @@ for row in results:#循环出所有的表名
             #phpunit测试根据ID删除记录的方法，进回收站，不是直接删数据库的记录
             deleteStr = zhushiStr.format(params="",usage="删除记录的方法，进回收站，不是直接删数据库的记录") + "    public function testdeleteUpdateOne()\r    {\r"
             deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneById(1);\r"
+            deleteStr += "        if(empty($record)){\r            echo \"搜索无数据\";\r            exit;\r}"
             deleteStr += "        $record = $record[0];\r"
             deleteStr += "        $res= $record->deleteUpdateOne();\r"
             deleteStr += "        var_dump($res);\r"
@@ -797,7 +804,7 @@ for row in results:#循环出所有的表名
         #update xxx set = xxx where id = xxx
         editStr = zhushiStr.format(params="", usage="编辑一条记录")+"    public function editOne()"
         if phpVersion == 7:
-            editStr += " : int"
+            editStr += " : array"
         editStr += "\r    {\r"
         columnStr = ""
         columnArrayStr = ""
@@ -817,6 +824,7 @@ for row in results:#循环出所有的表名
         # phpunit测试编辑一条记录
         addStr = zhushiStr.format(params="", usage="测试编辑一条记录") + "    public function testeditOne()\r    {\r"
         addStr += "        $record = " + modelFileName[0:-4] + "::getOneById(1);\r"
+        addStr += "        if(empty($record)){\r            echo \"搜索无数据\";\r            exit;\r}"
         addStr += "        $record = $record[0];\r"
         for column in tableColumnList:
             if column["type"] == "int":  # 如果字段是int类型：
@@ -851,7 +859,11 @@ for row in results:#循环出所有的表名
             if res.strip() == "E":
                 unitTestFinishedFileFd.write(item + "\t\t\t False \r")
             else:
-                unitTestFinishedFileFd.write(item + "\t\t\t True \r")
+                if res.strip() == "搜索无数据":
+                    unitTestFinishedFileFd.write(item + "\t\t\t"+res.strip()+"\t\t\t True \r")
+                else:
+                    unitTestFinishedFileFd.write(item + "\t\t\t True \r")
+
             unitTestFinishedFileFd.flush()
 
     nowNum = nowNum + 1

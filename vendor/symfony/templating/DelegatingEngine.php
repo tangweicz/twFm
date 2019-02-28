@@ -15,8 +15,6 @@ namespace Symfony\Component\Templating;
  * DelegatingEngine selects an engine for a given template.
  *
  * @author Fabien Potencier <fabien@symfony.com>
- *
- * @api
  */
 class DelegatingEngine implements EngineInterface, StreamingEngineInterface
 {
@@ -26,11 +24,7 @@ class DelegatingEngine implements EngineInterface, StreamingEngineInterface
     protected $engines = array();
 
     /**
-     * Constructor.
-     *
      * @param EngineInterface[] $engines An array of EngineInterface instances to add
-     *
-     * @api
      */
     public function __construct(array $engines = array())
     {
@@ -41,8 +35,6 @@ class DelegatingEngine implements EngineInterface, StreamingEngineInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @api
      */
     public function render($name, array $parameters = array())
     {
@@ -51,8 +43,6 @@ class DelegatingEngine implements EngineInterface, StreamingEngineInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @api
      */
     public function stream($name, array $parameters = array())
     {
@@ -66,21 +56,12 @@ class DelegatingEngine implements EngineInterface, StreamingEngineInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @api
      */
     public function exists($name)
     {
         return $this->getEngine($name)->exists($name);
     }
 
-    /**
-     * Adds an engine.
-     *
-     * @param EngineInterface $engine An EngineInterface instance
-     *
-     * @api
-     */
     public function addEngine(EngineInterface $engine)
     {
         $this->engines[] = $engine;
@@ -88,8 +69,6 @@ class DelegatingEngine implements EngineInterface, StreamingEngineInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @api
      */
     public function supports($name)
     {
@@ -110,8 +89,6 @@ class DelegatingEngine implements EngineInterface, StreamingEngineInterface
      * @return EngineInterface The engine
      *
      * @throws \RuntimeException if no engine able to work with the template is found
-     *
-     * @api
      */
     public function getEngine($name)
     {

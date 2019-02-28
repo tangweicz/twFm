@@ -20,9 +20,9 @@ class CObject{
 
         if($result === false || is_numeric($result)){//数据库操作结果有误或者是数字，那么这儿就直接返回false给用户
             if($result == false){
-                return 0;
+                return array();
             }else{
-                return $result;
+                return array("lastReturn"=>$result);
             }
         }
 
@@ -79,7 +79,7 @@ class CObject{
 
             }else{
 
-                return 0;
+                return array();
 
             }
         }else{//不需要将数据转换成对象，那么直接返回，都是数组，在写APP接口的时候可以使用

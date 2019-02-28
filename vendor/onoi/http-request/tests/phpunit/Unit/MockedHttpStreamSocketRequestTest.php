@@ -20,7 +20,7 @@ class MockedHttpStreamSocketRequestTest extends \PHPUnit_Framework_TestCase {
 
 		stream_wrapper_unregister( 'http' );
 		$return = stream_wrapper_register(
-			'http', 
+			'http',
 			'Onoi\HttpRequest\Tests\MockHttpStreamWrapper'
 		);
 
@@ -77,6 +77,25 @@ class MockedHttpStreamSocketRequestTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
+	public function testToReturnInvalidResource() {
+
+		$instance = $this->getMockBuilder( '\Onoi\HttpRequest\SocketRequest' )
+			->disableOriginalConstructor()
+			->setMethods( array( 'getResourceFromSocketClient' ) )
+			->getMock();
+
+		$instance->expects( $this->once() )
+			->method( 'getResourceFromSocketClient' )
+			->will( $this->returnValue( false ) );
+
+		$instance->setOption( ONOI_HTTP_REQUEST_URL, 'http://example.com/' );
+
+		$this->assertEquals(
+			false,
+			$instance->execute()
+		);
+	}
+
 	public function locationProvider() {
 
 		$urlComponent = array (
@@ -98,6 +117,34 @@ class MockedHttpStreamSocketRequestTest extends \PHPUnit_Framework_TestCase {
 			$urlComponent,
 			'/foo',
 			'http://example.com/foo'
+		);
+
+		$urlComponent = array (
+			'scheme' => 'https',
+			'host' => 'tls://example.com',
+			'port' => 443,
+			'path' => ''
+		);
+
+		$provider[] = array(
+			'https://example.com',
+			$urlComponent,
+			'/foo',
+			'https://example.com/foo'
+		);
+
+		$urlComponent = array (
+			'scheme' => 'https',
+			'host' => 'tls://example.com',
+			'port' => 4443,
+			'path' => ''
+		);
+
+		$provider[] = array(
+			'https://example.com:4443',
+			$urlComponent,
+			'/foo',
+			'https://example.com/foo'
 		);
 
 		return $provider;

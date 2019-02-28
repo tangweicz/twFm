@@ -7,9 +7,13 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'phpWorker\\' => array($baseDir . '/phpWorker'),
+    'phpDocumentor\\Reflection\\' => array($vendorDir . '/phpdocumentor/reflection-common/src', $vendorDir . '/phpdocumentor/reflection-docblock/src', $vendorDir . '/phpdocumentor/type-resolver/src'),
     'Workerman\\' => array($vendorDir . '/workerman/workerman'),
+    'Webmozart\\Assert\\' => array($vendorDir . '/webmozart/assert/src'),
+    'Symfony\\Polyfill\\Ctype\\' => array($vendorDir . '/symfony/polyfill-ctype'),
     'Symfony\\Component\\Yaml\\' => array($vendorDir . '/symfony/yaml'),
     'Symfony\\Component\\Templating\\' => array($vendorDir . '/symfony/templating'),
+    'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
     'Onoi\\HttpRequest\\' => array($vendorDir . '/onoi/http-request/src'),
     'Onoi\\Cache\\' => array($vendorDir . '/onoi/cache/src'),
     'NoahBuscher\\Macaw\\' => array($vendorDir . '/codingbean/macaw'),

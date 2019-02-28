@@ -26,21 +26,9 @@ class CachedCurlRequest extends CurlRequest {
 	private $cache;
 
 	/**
-	 * Custom prefix
-	 *
-	 * @var string
-	 */
-	private $cachePrefix = '';
-
-	/**
 	 * @var boolean
 	 */
-	private $isCached = false;
-
-	/**
-	 * @var integer
-	 */
-	private $expiry = 60; // 60 sec by default
+	private $isFromCache = false;
 
 	/**
 	 * @since  1.0
@@ -52,33 +40,47 @@ class CachedCurlRequest extends CurlRequest {
 		parent::__construct( $handle );
 
 		$this->cache = $cache;
+		$this->setOption( ONOI_HTTP_REQUEST_RESPONSECACHE_TTL, 60 ); // 60 sec by default
+		$this->setOption( ONOI_HTTP_REQUEST_RESPONSECACHE_PREFIX, '' );
 	}
 
 	/**
+	 * @deprecated since 1.3, use option ONOI_HTTP_REQUEST_RESPONSECACHE_TTL instead
 	 * @since  1.0
 	 *
 	 * @param integer $expiry
 	 */
 	public function setExpiryInSeconds( $expiry ) {
-		$this->expiry = (int)$expiry;
+		$this->setOption( ONOI_HTTP_REQUEST_RESPONSECACHE_TTL, (int)$expiry );
 	}
 
 	/**
+	 * @deprecated since 1.3, use option ONOI_HTTP_REQUEST_RESPONSECACHE_PREFIX instead
 	 * @since  1.0
 	 *
 	 * @param string $cachePrefix
 	 */
 	public function setCachePrefix( $cachePrefix ) {
-		$this->cachePrefix = (string)$cachePrefix;
+		$this->setOption( ONOI_HTTP_REQUEST_RESPONSECACHE_PREFIX, (string)$cachePrefix );
 	}
 
 	/**
+	 * @deprecated since 1.3, use CachedCurlRequest::isFromCache instead
 	 * @since  1.0
 	 *
 	 * @return boolean
 	 */
 	public function isCached() {
-		return $this->isCached;
+		return $this->isFromCache();
+	}
+
+	/**
+	 * @since  1.3
+	 *
+	 * @return boolean
+	 */
+	public function isFromCache() {
+		return $this->isFromCache;
 	}
 
 	/**
@@ -88,17 +90,17 @@ class CachedCurlRequest extends CurlRequest {
 	 */
 	public function execute() {
 
-		$key = $this->getKeyFromOptions();
-		$this->isCached = false;
+		list( $key, $expiry ) = $this->getKeysFromOptions();
+		$this->isFromCache = false;
 
 		if ( $this->cache->contains( $key ) ) {
-			$this->isCached = true;
+			$this->isFromCache = true;
 			return $this->cache->fetch( $key );
 		}
 
 		$response = parent::execute();
 
-		// Do not cache for a failed response
+		// Do not cache any failed response
 		if ( $this->getLastErrorCode() !== 0 ) {
 			return $response;
 		}
@@ -106,13 +108,13 @@ class CachedCurlRequest extends CurlRequest {
 		$this->cache->save(
 			$key,
 			$response,
-			$this->expiry
+			$expiry
 		);
 
 		return $response;
 	}
 
-	private function getKeyFromOptions() {
+	private function getKeysFromOptions() {
 
 		// curl_init can provide the URL which will set the value to the
 		// CURLOPT_URL option, ensure to have the URL as part of the options
@@ -125,14 +127,17 @@ class CachedCurlRequest extends CurlRequest {
 		// Avoid an unsorted order that would create unstable keys
 		ksort( $this->options );
 
-		$key = $this->cachePrefix . self::CACHE_PREFIX . md5(
+		$expiry = $this->getOption( ONOI_HTTP_REQUEST_RESPONSECACHE_TTL );
+		$prefix = $this->getOption( ONOI_HTTP_REQUEST_RESPONSECACHE_PREFIX );
+
+		$key = $prefix . self::CACHE_PREFIX . md5(
 			json_encode( $this->options )
 		);
 
 		// Reuse the handle but clear the options
 		$this->options = array();
 
-		return $key;
+		return array( $key, $expiry );
 	}
 
 }

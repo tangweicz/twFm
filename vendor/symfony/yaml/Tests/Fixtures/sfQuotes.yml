@@ -3,9 +3,9 @@ test: Some characters at the beginning of a string must be escaped
 brief: >
     Some characters at the beginning of a string must be escaped
 yaml: |
-    foo: | bar
+    foo: '| bar'
 php: |
-    array('foo' => '| bar')
+    ['foo' => '| bar']
 ---
 test: A key can be a quoted string
 brief: >
@@ -19,15 +19,15 @@ yaml: |
     "foo4: ": bar
     foo5: { "foo \" bar: ": bar, 'foo '' bar: ': bar }
 php: |
-    array(
+    [
       'foo1' => 'bar',
       'foo2' => 'bar',
       'foo " bar' => 'bar',
       'foo \' bar' => 'bar',
       'foo3: ' => 'bar',
       'foo4: ' => 'bar',
-      'foo5' => array(
+      'foo5' => [
         'foo " bar: ' => 'bar',
         'foo \' bar: ' => 'bar',
-      ),
-    )
+      ],
+    ]

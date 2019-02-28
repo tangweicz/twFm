@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\Templating\Helper;
 
-@trigger_error('The Symfony\Component\Templating\Helper\AssetsHelper is deprecated since version 2.7 and will be removed in 3.0. Use the Asset component instead.', E_USER_DEPRECATED);
+@trigger_error('The Symfony\Component\Templating\Helper\AssetsHelper is deprecated since Symfony 2.7 and will be removed in 3.0. Use the Asset component instead.', E_USER_DEPRECATED);
 
 use Symfony\Component\Templating\Asset\PathPackage;
 use Symfony\Component\Templating\Asset\UrlPackage;
@@ -21,9 +21,7 @@ use Symfony\Component\Templating\Asset\UrlPackage;
  *
  * Usage:
  *
- * <code>
- *   <img src="<?php echo $view['assets']->getUrl('foo.png') ?>" />
- * </code>
+ *     <img src="<?php echo $view['assets']->getUrl('foo.png') ?>" />
  *
  * @author Fabien Potencier <fabien@symfony.com>
  * @author Kris Wallsmith <kris@symfony.com>
@@ -33,8 +31,6 @@ use Symfony\Component\Templating\Asset\UrlPackage;
 class AssetsHelper extends CoreAssetsHelper
 {
     /**
-     * Constructor.
-     *
      * @param string       $basePath      The base path
      * @param string|array $baseUrls      Base asset URLs
      * @param string       $version       The asset version

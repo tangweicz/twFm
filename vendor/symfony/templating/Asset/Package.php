@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\Templating\Asset;
 
-@trigger_error('The Symfony\Component\Templating\Asset\Package is deprecated since version 2.7 and will be removed in 3.0. Use the Asset component instead.', E_USER_DEPRECATED);
+@trigger_error('The Symfony\Component\Templating\Asset\Package is deprecated since Symfony 2.7 and will be removed in 3.0. Use the Asset component instead.', E_USER_DEPRECATED);
 
 /**
  * The basic package will add a version to asset URLs.
@@ -26,8 +26,6 @@ class Package implements PackageInterface
     private $format;
 
     /**
-     * Constructor.
-     *
      * @param string $version The package version
      * @param string $format  The format used to apply the version
      */

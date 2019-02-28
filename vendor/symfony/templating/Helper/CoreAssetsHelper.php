@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\Templating\Helper;
 
-@trigger_error('The Symfony\Component\Templating\Helper\CoreAssetsHelper is deprecated since version 2.7 and will be removed in 3.0. Use the Asset component instead.', E_USER_DEPRECATED);
+@trigger_error('The Symfony\Component\Templating\Helper\CoreAssetsHelper is deprecated since Symfony 2.7 and will be removed in 3.0. Use the Asset component instead.', E_USER_DEPRECATED);
 
 use Symfony\Component\Templating\Asset\PackageInterface;
 
@@ -20,9 +20,7 @@ use Symfony\Component\Templating\Asset\PackageInterface;
  *
  * Usage:
  *
- * <code>
- *   <img src="<?php echo $view['assets']->getUrl('foo.png') ?>" />
- * </code>
+ *     <img src="<?php echo $view['assets']->getUrl('foo.png') ?>" />
  *
  * @author Fabien Potencier <fabien@symfony.com>
  * @author Kris Wallsmith <kris@symfony.com>
@@ -35,8 +33,6 @@ class CoreAssetsHelper extends Helper implements PackageInterface
     protected $namedPackages = array();
 
     /**
-     * Constructor.
-     *
      * @param PackageInterface $defaultPackage The default package
      * @param array            $namedPackages  Additional packages indexed by name
      */
@@ -49,11 +45,6 @@ class CoreAssetsHelper extends Helper implements PackageInterface
         }
     }
 
-    /**
-     * Sets the default package.
-     *
-     * @param PackageInterface $defaultPackage The default package
-     */
     public function setDefaultPackage(PackageInterface $defaultPackage)
     {
         $this->defaultPackage = $defaultPackage;

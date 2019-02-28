@@ -2,6 +2,7 @@
 
 namespace Controllers;
 
+use Models\indexModel;
 use Models\taskModel;
 
 use Libs\CTemplate;

@@ -2,10 +2,13 @@
 
 namespace Dotenv;
 
+use Dotenv\Exception\InvalidPathException;
+
 /**
- * Dotenv.
+ * This is the dotenv class.
  *
- * Loads a `.env` file in the given directory and sets the environment vars.
+ * It's responsible for loading a `.env` file in the given directory and
+ * setting the environment vars.
  */
 class Dotenv
 {
@@ -23,37 +26,63 @@ class Dotenv
      */
     protected $loader;
 
+    /**
+     * Create a new dotenv instance.
+     *
+     * @param string $path
+     * @param string $file
+     *
+     * @return void
+     */
     public function __construct($path, $file = '.env')
     {
         $this->filePath = $this->getFilePath($path, $file);
+        $this->loader = new Loader($this->filePath, true);
     }
 
     /**
-     * Load `.env` file in given directory.
+     * Load environment file in given directory.
      *
-     * @return void
+     * @throws \Dotenv\Exception\InvalidPathException|\Dotenv\Exception\InvalidFileException
+     *
+     * @return array
      */
     public function load()
     {
-        $this->loader = new Loader($this->filePath, $immutable = true);
-
-        return $this->loader->load();
+        return $this->loadData();
     }
 
     /**
-     * Load `.env` file in given directory.
+     * Load environment file in given directory, suppress InvalidPathException.
      *
-     * @return void
+     * @throws \Dotenv\Exception\InvalidFileException
+     *
+     * @return array
+     */
+    public function safeLoad()
+    {
+        try {
+            return $this->loadData();
+        } catch (InvalidPathException $e) {
+            // suppressing exception
+            return array();
+        }
+    }
+
+    /**
+     * Load environment file in given directory.
+     *
+     * @throws \Dotenv\Exception\InvalidPathException|\Dotenv\Exception\InvalidFileException
+     *
+     * @return array
      */
     public function overload()
     {
-        $this->loader = new Loader($this->filePath, $immutable = false);
-
-        return $this->loader->load();
+        return $this->loadData(true);
     }
 
     /**
-     * Returns the full path to the file ensuring that it's readable.
+     * Returns the full path to the file.
      *
      * @param string $path
      * @param string $file
@@ -72,14 +101,38 @@ class Dotenv
     }
 
     /**
-     * Required ensures that the specified variables exist, and returns a new Validation object.
+     * Actually load the data.
      *
-     * @param mixed $variable
+     * @param bool $overload
+     *
+     * @throws \Dotenv\Exception\InvalidPathException|\Dotenv\Exception\InvalidFileException
+     *
+     * @return array
+     */
+    protected function loadData($overload = false)
+    {
+        return $this->loader->setImmutable(!$overload)->load();
+    }
+
+    /**
+     * Required ensures that the specified variables exist, and returns a new validator object.
+     *
+     * @param string|string[] $variable
      *
      * @return \Dotenv\Validator
      */
     public function required($variable)
     {
         return new Validator((array) $variable, $this->loader);
+    }
+
+    /**
+     * Get the list of environment variables declared inside the 'env' file.
+     *
+     * @return array
+     */
+    public function getEnvironmentVariableNames()
+    {
+        return $this->loader->variableNames;
     }
 }

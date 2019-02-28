@@ -11,15 +11,16 @@
 
 namespace Symfony\Component\Templating\Tests;
 
-use Symfony\Component\Templating\PhpEngine;
-use Symfony\Component\Templating\Loader\Loader;
-use Symfony\Component\Templating\Storage\StringStorage;
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Templating\Helper\SlotsHelper;
+use Symfony\Component\Templating\Loader\Loader;
+use Symfony\Component\Templating\PhpEngine;
+use Symfony\Component\Templating\Storage\StringStorage;
 use Symfony\Component\Templating\TemplateNameParser;
-use Symfony\Component\Templating\TemplateReferenceInterface;
 use Symfony\Component\Templating\TemplateReference;
+use Symfony\Component\Templating\TemplateReferenceInterface;
 
-class PhpEngineTest extends \PHPUnit_Framework_TestCase
+class PhpEngineTest extends TestCase
 {
     protected $loader;
 
@@ -64,7 +65,7 @@ class PhpEngineTest extends \PHPUnit_Framework_TestCase
         $engine[$foo] = 'bar';
         $this->assertEquals($foo, $engine->get('bar'), '->set() takes an alias as a second argument');
 
-        $this->assertTrue(isset($engine['bar']));
+        $this->assertArrayHasKey('bar', $engine);
 
         try {
             $engine->get('foobar');
@@ -74,7 +75,7 @@ class PhpEngineTest extends \PHPUnit_Framework_TestCase
             $this->assertEquals('The helper "foobar" is not defined.', $e->getMessage(), '->get() throws an InvalidArgumentException if the helper is not defined');
         }
 
-        $this->assertTrue(isset($engine['bar']));
+        $this->assertArrayHasKey('bar', $engine);
         $this->assertTrue($engine->has('foo'), '->has() returns true if the helper exists');
         $this->assertFalse($engine->has('foobar'), '->has() returns false if the helper does not exist');
     }
@@ -85,7 +86,7 @@ class PhpEngineTest extends \PHPUnit_Framework_TestCase
         $foo = new \Symfony\Component\Templating\Tests\Fixtures\SimpleHelper('foo');
         $engine->set($foo);
 
-        $this->setExpectedException('\LogicException');
+        $this->{method_exists($this, $_ = 'expectException') ? $_ : 'setExpectedException'}('\LogicException');
 
         unset($engine['foo']);
     }
