@@ -216,45 +216,46 @@ for row in results:#循环出所有的表名
 
         #select * from xxx=xxx
         for column in tableColumnList:
-            if "id" in column["name"].lower():#如果字段中带有Id、ID、id等字眼的，一般都是跟外表关联的都需要单独生成获取的方法
+            if "id" in column["name"].lower() or "status" in column["name"].lower():#如果字段中带有Id、ID、id等字眼的，一般都是跟外表关联的都需要单独生成获取的方法
                 if hasIsDeleted:
 
-                    tmpGetStr = zhushiStr.format(params="", usage="根据" + column["name"] + "获取一条不在回收站内的数据") + "    public static function getOneUndeletedBy" + column["name"].capitalize() + "($" + column["name"] + ")"
-                    if phpVersion == 7:
-                        tmpGetStr += " : array"
-                    tmpGetStr += "\r    {\r"
-                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 0 AND " + column["name"] + " = ?  order by id desc limit 0,1\";\r"
-                    tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
-                    tmpGetStr += "        return self::query($sql, $sqlParam, true);"
-                    tmpGetStr += "\r    }\r"
-                    fd.write(tmpGetStr)
-                    # phpunit测试获取一条不在回收站内的数据
-                    deleteStr = zhushiStr.format(params="", usage="获取一条不在回收站内的数据") + "    public function testgetOneUndeletedBy" + column["name"].capitalize() + "()\r    {\r"
-                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneUndeletedBy" + column["name"].capitalize() + "(10);\r"
-                    deleteStr += "        var_dump($record);\r"
-                    deleteStr += "        #./vendor/bin/phpunit --filter testgetOneUndeletedBy" + column["name"].capitalize() + " ./test/" + modelTestFileName
-                    deleteStr += "\r    }\r"
-                    testFileFd.write(deleteStr)
-                    unitTestCommandList.append("./vendor/bin/phpunit --filter testgetOneUndeletedBy" + column["name"].capitalize() + " ./test/" + modelTestFileName)
+                    if not "status" in column["name"].lower():
+                        tmpGetStr = zhushiStr.format(params="", usage="根据" + column["name"] + "获取一条不在回收站内的数据") + "    public static function getOneUndeletedBy" + column["name"].capitalize() + "($" + column["name"] + ")"
+                        if phpVersion == 7:
+                            tmpGetStr += " : array"
+                        tmpGetStr += "\r    {\r"
+                        tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 0 AND " + column["name"] + " = ?  order by id desc limit 0,1\";\r"
+                        tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
+                        tmpGetStr += "        return self::query($sql, $sqlParam, true);"
+                        tmpGetStr += "\r    }\r"
+                        fd.write(tmpGetStr)
+                        # phpunit测试获取一条不在回收站内的数据
+                        deleteStr = zhushiStr.format(params="", usage="获取一条不在回收站内的数据") + "    public function testgetOneUndeletedBy" + column["name"].capitalize() + "()\r    {\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneUndeletedBy" + column["name"].capitalize() + "(10);\r"
+                        deleteStr += "        var_dump($record);\r"
+                        deleteStr += "        #./vendor/bin/phpunit --filter testgetOneUndeletedBy" + column["name"].capitalize() + " ./test/" + modelTestFileName
+                        deleteStr += "\r    }\r"
+                        testFileFd.write(deleteStr)
+                        unitTestCommandList.append("./vendor/bin/phpunit --filter testgetOneUndeletedBy" + column["name"].capitalize() + " ./test/" + modelTestFileName)
 
 
-                    tmpGetStr = zhushiStr.format(params="", usage="根据" + column["name"] + "获取一条在回收站内的数据") + "    public static function getOneDeletedBy" + column["name"].capitalize() + "($" + column["name"] + ")"
-                    if phpVersion == 7:
-                        tmpGetStr += " : array"
-                    tmpGetStr += "\r    {\r"
-                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 1 AND " + column["name"] + " = ?  order by id desc limit 0,1\";\r"
-                    tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
-                    tmpGetStr += "        return self::query($sql, $sqlParam, true);"
-                    tmpGetStr += "\r    }\r"
-                    fd.write(tmpGetStr)
-                    # phpunit测试获取一条在回收站内的数据
-                    deleteStr = zhushiStr.format(params="", usage="获取一条在回收站内的数据") + "    public function testgetOneDeletedBy" + column["name"].capitalize() + "()\r    {\r"
-                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneDeletedBy" + column["name"].capitalize() + "(10);\r"
-                    deleteStr += "        var_dump($record);\r"
-                    deleteStr += "        #./vendor/bin/phpunit --filter testgetOneDeletedBy" + column["name"].capitalize() + " ./test/" + modelTestFileName
-                    deleteStr += "\r    }\r"
-                    testFileFd.write(deleteStr)
-                    unitTestCommandList.append("./vendor/bin/phpunit --filter testgetOneDeletedBy" + column["name"].capitalize() + " ./test/" + modelTestFileName)
+                        tmpGetStr = zhushiStr.format(params="", usage="根据" + column["name"] + "获取一条在回收站内的数据") + "    public static function getOneDeletedBy" + column["name"].capitalize() + "($" + column["name"] + ")"
+                        if phpVersion == 7:
+                            tmpGetStr += " : array"
+                        tmpGetStr += "\r    {\r"
+                        tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 1 AND " + column["name"] + " = ?  order by id desc limit 0,1\";\r"
+                        tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
+                        tmpGetStr += "        return self::query($sql, $sqlParam, true);"
+                        tmpGetStr += "\r    }\r"
+                        fd.write(tmpGetStr)
+                        # phpunit测试获取一条在回收站内的数据
+                        deleteStr = zhushiStr.format(params="", usage="获取一条在回收站内的数据") + "    public function testgetOneDeletedBy" + column["name"].capitalize() + "()\r    {\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneDeletedBy" + column["name"].capitalize() + "(10);\r"
+                        deleteStr += "        var_dump($record);\r"
+                        deleteStr += "        #./vendor/bin/phpunit --filter testgetOneDeletedBy" + column["name"].capitalize() + " ./test/" + modelTestFileName
+                        deleteStr += "\r    }\r"
+                        testFileFd.write(deleteStr)
+                        unitTestCommandList.append("./vendor/bin/phpunit --filter testgetOneDeletedBy" + column["name"].capitalize() + " ./test/" + modelTestFileName)
 
                     tmpGetStr = zhushiStr.format(params="", usage="根据"+column["name"]+"不带分页获取所有的不在回收站内的数据")+"    public static function getAllUndeletedBy"+column["name"].capitalize()+"WithOutLimit($"+column["name"]+")"
                     if phpVersion == 7:
@@ -370,24 +371,24 @@ for row in results:#循环出所有的表名
                     testFileFd.write(deleteStr)
                     unitTestCommandList.append("./vendor/bin/phpunit --filter testgetAllBy" + column["name"].capitalize() + "WithLimit ./test/" + modelTestFileName)
 
-                    tmpGetStr = zhushiStr.format(params="", usage="根据" + column["name"] + "获取一条数据") + "    public static function getOneBy" + column["name"].capitalize() + "($" + column["name"] + ")"
-                    if phpVersion == 7:
-                        tmpGetStr += " : array"
-                    tmpGetStr += "\r    {\r"
-                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE " + column["name"] + " = ?  order by id desc limit 0,1\";\r"
-                    tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
-                    tmpGetStr += "        return self::query($sql, $sqlParam, true);"
-                    tmpGetStr += "\r    }\r"
-                    fd.write(tmpGetStr)
-                    # phpunit测试获取一条数据
-                    deleteStr = zhushiStr.format(params="", usage="获取一条数据") + "    public function testgetOneBy" + column["name"].capitalize() + "()\r    {\r"
-                    deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneBy" + column["name"].capitalize() + "(10);\r"
-                    deleteStr += "        var_dump($record);\r"
-                    deleteStr += "        #./vendor/bin/phpunit --filter testgetOneBy" + column["name"].capitalize() + " ./test/" + modelTestFileName
-                    deleteStr += "\r    }\r"
-                    testFileFd.write(deleteStr)
-                    unitTestCommandList.append("./vendor/bin/phpunit --filter testgetOneBy" + column["name"].capitalize() + " ./test/" + modelTestFileName)
-
+                    if not "status" in column["name"].lower():
+                        tmpGetStr = zhushiStr.format(params="", usage="根据" + column["name"] + "获取一条数据") + "    public static function getOneBy" + column["name"].capitalize() + "($" + column["name"] + ")"
+                        if phpVersion == 7:
+                            tmpGetStr += " : array"
+                        tmpGetStr += "\r    {\r"
+                        tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE " + column["name"] + " = ?  order by id desc limit 0,1\";\r"
+                        tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
+                        tmpGetStr += "        return self::query($sql, $sqlParam, true);"
+                        tmpGetStr += "\r    }\r"
+                        fd.write(tmpGetStr)
+                        # phpunit测试获取一条数据
+                        deleteStr = zhushiStr.format(params="", usage="获取一条数据") + "    public function testgetOneBy" + column["name"].capitalize() + "()\r    {\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneBy" + column["name"].capitalize() + "(10);\r"
+                        deleteStr += "        var_dump($record);\r"
+                        deleteStr += "        #./vendor/bin/phpunit --filter testgetOneBy" + column["name"].capitalize() + " ./test/" + modelTestFileName
+                        deleteStr += "\r    }\r"
+                        testFileFd.write(deleteStr)
+                        unitTestCommandList.append("./vendor/bin/phpunit --filter testgetOneBy" + column["name"].capitalize() + " ./test/" + modelTestFileName)
         #select * from xxxx where xxx=xxx and xxx=xxx and xxx=xxx
         if len(allColumnWithIdList) > 1:#如果含有`id`关键词的字段有2个及2个以上，那么需要组合生成他们的搜索方法
             startPoint = 2
