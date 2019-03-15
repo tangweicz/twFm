@@ -213,7 +213,6 @@ for row in results:#循环出所有的表名
             if column["name"] == "isDeleted":
                 hasIsDeleted = True
 
-
         #select * from xxx=xxx
         for column in tableColumnList:
             if "id" in column["name"].lower() or "status" in column["name"].lower():#如果字段中带有Id、ID、id等字眼的，一般都是跟外表关联的都需要单独生成获取的方法
@@ -670,7 +669,7 @@ for row in results:#循环出所有的表名
         if hasIsDeleted:#软删除数据，即将数据放入回收站
             deleteUpdateStr = zhushiStr.format(params="", usage="删除记录的方法，进回收站，不是直接删数据库的记录") + "    public function deleteUpdateOne()"
             if phpVersion == 7:
-                deleteUpdateStr += " : int"
+                deleteUpdateStr += " : array"
             deleteUpdateStr += "\r    {\r"
             deleteUpdateStr += "        $sql = \"UPDATE \".self::$table.\" SET `isDeleted` = 1 WHERE `id` = ?\";\r"
             deleteUpdateStr += "        $sqlParam = array($this->id);\r"
