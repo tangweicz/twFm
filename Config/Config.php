@@ -15,6 +15,6 @@ return array(
 
     "pass"=>"root",
 
-    "dbname"=>"wufu"
+    "dbname"=>"ztzPin"
 
 );

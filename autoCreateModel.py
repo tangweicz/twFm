@@ -196,7 +196,7 @@ for row in results:#循环出所有的表名
         #phpunit测试delete方法祥光代码
         deleteStr = zhushiStr.format(params="", usage="测试删除记录的方法，不进回收站，直接删数据库的记录") + "    public function testdeleteOne()\r    {\r"
         deleteStr += "        $record = "+modelFileName[0:-4]+"::getOneById(10);\r"
-        deleteStr += "        if(empty($record)){\r            echo \"搜索无数据\";\r            exit;\r}"
+        deleteStr += "        if(empty($record)){\r            echo \"搜索无数据\";\r            exit;\r        }\r"
         deleteStr += "        $record = $record[0];\r"
         deleteStr += "        $res = $record->deleteOne();\r"
         deleteStr += "        var_dump($res);\r"
@@ -207,23 +207,30 @@ for row in results:#循环出所有的表名
 
         allColumnWithIdList = list()
         hasIsDeleted = False#判断是否有isDeleted字段，即软删除字段
+        hasSort = False#判断是否有sort字段，排序字段
         for column in tableColumnList:
             if "id" in column["name"].lower():
                 allColumnWithIdList.append(column["name"])
             if column["name"] == "isDeleted":
                 hasIsDeleted = True
+            if column["name"] == "sort":
+                hasSort = True
 
         #select * from xxx=xxx
         for column in tableColumnList:
             if "id" in column["name"].lower() or "status" in column["name"].lower():#如果字段中带有Id、ID、id等字眼的，一般都是跟外表关联的都需要单独生成获取的方法
                 if hasIsDeleted:
-
                     if not "status" in column["name"].lower():
                         tmpGetStr = zhushiStr.format(params="", usage="根据" + column["name"] + "获取一条不在回收站内的数据") + "    public static function getOneUndeletedBy" + column["name"].capitalize() + "($" + column["name"] + ")"
                         if phpVersion == 7:
                             tmpGetStr += " : array"
                         tmpGetStr += "\r    {\r"
-                        tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 0 AND " + column["name"] + " = ?  order by id desc limit 0,1\";\r"
+                        tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 0 AND " + column["name"] + " = ?  order by "
+                        if hasSort:
+                            tmpGetStr += "sort"
+                        else:
+                            tmpGetStr += "id"
+                        tmpGetStr += " desc limit 0,1\";\r"
                         tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
                         tmpGetStr += "        return self::query($sql, $sqlParam, true);"
                         tmpGetStr += "\r    }\r"
@@ -242,7 +249,12 @@ for row in results:#循环出所有的表名
                         if phpVersion == 7:
                             tmpGetStr += " : array"
                         tmpGetStr += "\r    {\r"
-                        tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 1 AND " + column["name"] + " = ?  order by id desc limit 0,1\";\r"
+                        tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 1 AND " + column["name"] + " = ?  order by "
+                        if hasSort:
+                            tmpGetStr += "sort"
+                        else:
+                            tmpGetStr += "id"
+                        tmpGetStr += " desc limit 0,1\";\r"
                         tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
                         tmpGetStr += "        return self::query($sql, $sqlParam, true);"
                         tmpGetStr += "\r    }\r"
@@ -256,11 +268,41 @@ for row in results:#循环出所有的表名
                         testFileFd.write(deleteStr)
                         unitTestCommandList.append("./vendor/bin/phpunit --filter testgetOneDeletedBy" + column["name"].capitalize() + " ./test/" + modelTestFileName)
 
+                        #根据ID生成IN查询
+                        tmpGetStr = zhushiStr.format(params="", usage="IN查询，根据" + column["name"] + "获取不在回收站内的数据") + "    public static function getAllUndeletedBy" + column["name"].capitalize() + "UseIn($" + column["name"] + "Values)"
+                        if phpVersion == 7:
+                            tmpGetStr += " : array"
+                        tmpGetStr += "\r    {\r"
+                        tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 0 AND find_in_set (`" + column["name"] + "`,\'$"+column["name"]+"Values \') order by "
+                        if hasSort:
+                            tmpGetStr += "sort"
+                        else:
+                            tmpGetStr += "id"
+                        tmpGetStr += " desc\";\r"
+                        tmpGetStr += "        $sqlParam = array();\r"
+                        tmpGetStr += "        return self::query($sql, $sqlParam, true);"
+                        tmpGetStr += "\r    }\r"
+                        fd.write(tmpGetStr)
+                        # phpunit测试获取一条不在回收站内的数据
+                        deleteStr = zhushiStr.format(params="",usage="IN查询， 获取一条不在回收站内的数据") + "    public function testgetAllUndeletedBy" + column["name"].capitalize() + "UseIn()\r    {\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllUndeletedBy" + column["name"].capitalize() + "UseIn(\'1,2,3,4\');\r"
+                        deleteStr += "        var_dump($record);\r"
+                        deleteStr += "        #./vendor/bin/phpunit --filter testgetAllUndeletedBy" + column["name"].capitalize() + "UseIn ./test/" + modelTestFileName
+                        deleteStr += "\r    }\r"
+                        testFileFd.write(deleteStr)
+                        unitTestCommandList.append("./vendor/bin/phpunit --filter testgetAllUndeletedBy" + column["name"].capitalize() + "UseIn ./test/" + modelTestFileName)
+
+
                     tmpGetStr = zhushiStr.format(params="", usage="根据"+column["name"]+"不带分页获取所有的不在回收站内的数据")+"    public static function getAllUndeletedBy"+column["name"].capitalize()+"WithOutLimit($"+column["name"]+")"
                     if phpVersion == 7:
                         tmpGetStr += " : array"
                     tmpGetStr += "\r    {\r"
-                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 0 AND "+column["name"]+" = ?  order by id desc \";\r"
+                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 0 AND "+column["name"]+" = ?  order by "
+                    if hasSort:
+                        tmpGetStr += "sort"
+                    else:
+                        tmpGetStr += "id"
+                    tmpGetStr += " desc \";\r"
                     tmpGetStr += "        $sqlParam = array($"+column["name"]+");\r"
                     tmpGetStr += "        return self::query($sql, $sqlParam, true);"
                     tmpGetStr += "\r    }\r"
@@ -280,7 +322,12 @@ for row in results:#循环出所有的表名
                         tmpGetStr += " : array"
                     tmpGetStr += "\r    {\r"
                     tmpGetStr += "        assert($limit = \"\");\r"#这儿后期需要做调整，对$limit的判断有点问题
-                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 0 AND " + column["name"] + " = ? order by id desc \".$limit;\r"
+                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 0 AND " + column["name"] + " = ? order by "
+                    if hasSort:
+                        tmpGetStr += "sort"
+                    else:
+                        tmpGetStr += "id"
+                    tmpGetStr += " desc \".$limit;\r"
                     tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
                     tmpGetStr += "        return self::query($sql, $sqlParam, true);"
                     tmpGetStr += "\r    }\r"
@@ -299,7 +346,12 @@ for row in results:#循环出所有的表名
                     if phpVersion == 7:
                         tmpGetStr += " : array"
                     tmpGetStr += "\r    {\r"
-                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 1 AND " + column["name"] + " = ? order by id desc \";\r"
+                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 1 AND " + column["name"] + " = ? order by "
+                    if hasSort:
+                        tmpGetStr += "sort"
+                    else:
+                        tmpGetStr += "id"
+                    tmpGetStr += " desc \";\r"
                     tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
                     tmpGetStr += "        return self::query($sql, $sqlParam, true);"
                     tmpGetStr += "\r    }\r"
@@ -318,7 +370,12 @@ for row in results:#循环出所有的表名
                         tmpGetStr += " : array"
                     tmpGetStr += "\r    {\r"
                     tmpGetStr += "        assert($limit = \"\");\r"  # 这儿后期需要做调整，对$limit的判断有点问题
-                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 1 AND " + column["name"] + " = ? order by id desc \".$limit;\r"
+                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE `isDeleted` = 1 AND " + column["name"] + " = ? order by "
+                    if hasSort:
+                        tmpGetStr += "sort"
+                    else:
+                        tmpGetStr += "id"
+                    tmpGetStr += " desc \".$limit;\r"
                     tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
                     tmpGetStr += "        return self::query($sql, $sqlParam, true);"
                     tmpGetStr += "\r    }\r"
@@ -332,12 +389,19 @@ for row in results:#循环出所有的表名
                     testFileFd.write(deleteStr)
                     unitTestCommandList.append("./vendor/bin/phpunit --filter testgetAllDeletedBy" + column["name"].capitalize() + "WithLimit ./test/" + modelTestFileName)
 
+
+
                 else:
                     tmpGetStr = zhushiStr.format(params="", usage="根据" + column["name"] + "不带分页获取所有的数据") + "    public static function getAllBy" + column["name"].capitalize() + "WithOutLimit($" + column["name"] + ")"
                     if phpVersion == 7:
                         tmpGetStr += " : array"
                     tmpGetStr += "\r    {\r"
-                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE " +column["name"] + " = ? order by id desc \";\r"
+                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE " +column["name"] + " = ? order by "
+                    if hasSort:
+                        tmpGetStr += "sort"
+                    else:
+                        tmpGetStr += "id"
+                    tmpGetStr += " desc \";\r"
                     tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
                     tmpGetStr += "        return self::query($sql, $sqlParam, true);"
                     tmpGetStr += "\r    }\r"
@@ -356,7 +420,12 @@ for row in results:#循环出所有的表名
                         tmpGetStr += " : array"
                     tmpGetStr += "\r    {\r"
                     tmpGetStr += "        assert($limit = \"\");\r"  # 这儿后期需要做调整，对$limit的判断有点问题
-                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE " + column["name"] + " = ? order by id desc \".$limit;\r"
+                    tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE " + column["name"] + " = ? order by "
+                    if hasSort:
+                        tmpGetStr += "sort"
+                    else:
+                        tmpGetStr += "id"
+                    tmpGetStr += " desc \".$limit;\r"
                     tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
                     tmpGetStr += "        return self::query($sql, $sqlParam, true);"
                     tmpGetStr += "\r    }\r"
@@ -375,7 +444,12 @@ for row in results:#循环出所有的表名
                         if phpVersion == 7:
                             tmpGetStr += " : array"
                         tmpGetStr += "\r    {\r"
-                        tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE " + column["name"] + " = ?  order by id desc limit 0,1\";\r"
+                        tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE " + column["name"] + " = ?  order by "
+                        if hasSort:
+                            tmpGetStr += "sort"
+                        else:
+                            tmpGetStr += "id"
+                        tmpGetStr += " desc limit 0,1\";\r"
                         tmpGetStr += "        $sqlParam = array($" + column["name"] + ");\r"
                         tmpGetStr += "        return self::query($sql, $sqlParam, true);"
                         tmpGetStr += "\r    }\r"
@@ -388,6 +462,30 @@ for row in results:#循环出所有的表名
                         deleteStr += "\r    }\r"
                         testFileFd.write(deleteStr)
                         unitTestCommandList.append("./vendor/bin/phpunit --filter testgetOneBy" + column["name"].capitalize() + " ./test/" + modelTestFileName)
+
+                        # 根据ID生成IN查询
+                        tmpGetStr = zhushiStr.format(params="", usage="IN查询，根据" + column["name"] + "获取不在回收站内的数据") + "    public static function getAllUndeletedBy" + column["name"].capitalize() + "UseIn($" + column["name"] + "Values)"
+                        if phpVersion == 7:
+                            tmpGetStr += " : array"
+                        tmpGetStr += "\r    {\r"
+                        tmpGetStr += "        $sql = \" SELECT * from \".self::$table.\" WHERE find_in_set(`" + column["name"] + "`, \'$" + column["name"] + "Values \') order by "
+                        if hasSort:
+                            tmpGetStr += "sort"
+                        else:
+                            tmpGetStr += "id"
+                        tmpGetStr += " desc\";\r"
+                        tmpGetStr += "        $sqlParam = array();\r"
+                        tmpGetStr += "        return self::query($sql, $sqlParam, true);"
+                        tmpGetStr += "\r    }\r"
+                        fd.write(tmpGetStr)
+                        # phpunit测试获取一条不在回收站内的数据
+                        deleteStr = zhushiStr.format(params="",usage="获取一条不在回收站内的数据") + "    public function testgetOneUndeletedBy" + column["name"].capitalize() + "UseIn()\r    {\r"
+                        deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneUndeletedBy" + column["name"].capitalize() + "UseIn(\'1,2,3,4\');\r"
+                        deleteStr += "        var_dump($record);\r"
+                        deleteStr += "        #./vendor/bin/phpunit --filter testgetOneUndeletedBy" + column["name"].capitalize() + "UseIn ./test/" + modelTestFileName
+                        deleteStr += "\r    }\r"
+                        testFileFd.write(deleteStr)
+                        unitTestCommandList.append("./vendor/bin/phpunit --filter testgetOneUndeletedBy" + column["name"].capitalize() + "UseIn ./test/" + modelTestFileName)
         #select * from xxxx where xxx=xxx and xxx=xxx and xxx=xxx
         if len(allColumnWithIdList) > 1:#如果含有`id`关键词的字段有2个及2个以上，那么需要组合生成他们的搜索方法
             startPoint = 2
@@ -414,7 +512,12 @@ for row in results:#循环出所有的表名
                             getAllStr += " : array"
                         getAllStr += "\r    {\r"
                         getAllStr += itemAssertStr
-                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 0 AND " + itemSqlStr[0:-5] + " order by id desc limit 0,1\";\r"
+                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 0 AND " + itemSqlStr[0:-5] + " order by "
+                        if hasSort:
+                            getAllStr += "sort"
+                        else:
+                            getAllStr += "id"
+                        getAllStr += " desc limit 0,1\";\r"
                         getAllStr += "        $sqlParam = array(" + itemStr[0:-2] + ");\r"
                         getAllStr += "        return self::query($sql, $sqlParam, true);"
                         getAllStr += "\r    }\r"
@@ -433,7 +536,12 @@ for row in results:#循环出所有的表名
                             getAllStr += " : array"
                         getAllStr += "\r    {\r"
                         getAllStr += itemAssertStr
-                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 1 AND " + itemSqlStr[0:-5] + " order by id desc limit 0,1\";\r"
+                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 1 AND " + itemSqlStr[0:-5] + " order by "
+                        if hasSort:
+                            getAllStr += "sort"
+                        else:
+                            getAllStr += "id"
+                        getAllStr += " desc limit 0,1\";\r"
                         getAllStr += "        $sqlParam = array(" + itemStr[0:-2] + ");\r"
                         getAllStr += "        return self::query($sql, $sqlParam, true);"
                         getAllStr += "\r    }\r"
@@ -452,7 +560,12 @@ for row in results:#循环出所有的表名
                             getAllStr += " : array"
                         getAllStr += "\r    {\r"
                         getAllStr += itemAssertStr
-                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 0 AND "+itemSqlStr[0:-5]+" order by id desc \";\r"
+                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 0 AND "+itemSqlStr[0:-5]+" order by "
+                        if hasSort:
+                            getAllStr += "sort"
+                        else:
+                            getAllStr += "id"
+                        getAllStr += " desc \";\r"
                         getAllStr += "        $sqlParam = array("+itemStr[0:-2]+");\r"
                         getAllStr += "        return self::query($sql, $sqlParam, true);"
                         getAllStr += "\r    }\r"  # 不带limit的获取所有的数据
@@ -471,7 +584,12 @@ for row in results:#循环出所有的表名
                             getAllStr += " : array"
                         getAllStr += "\r    {\r"
                         getAllStr += itemAssertStr
-                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 1 AND " + itemSqlStr[0:-5] + " order by id desc \";\r"
+                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 1 AND " + itemSqlStr[0:-5] + " order by "
+                        if hasSort:
+                            getAllStr += "sort"
+                        else:
+                            getAllStr += "id"
+                        getAllStr += " desc \";\r"
                         getAllStr += "        $sqlParam = array(" + itemStr[0:-2] + ");\r"
                         getAllStr += "        return self::query($sql, $sqlParam, true);"
                         getAllStr += "\r    }\r"  # 不带limit的获取所有的数据
@@ -491,7 +609,12 @@ for row in results:#循环出所有的表名
                         getAllStr += "\r    {\r"
                         getAllStr += itemAssertStr
                         getAllStr += "        assert($limit != \"\");\r"
-                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 0 AND " + itemSqlStr[0:-5] + " order by id desc \".$limit;\r"
+                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 0 AND " + itemSqlStr[0:-5] + " order by "
+                        if hasSort:
+                            getAllStr += "sort"
+                        else:
+                            getAllStr += "id"
+                        getAllStr += " desc \".$limit;\r"
                         getAllStr += "        $sqlParam = array(" + itemStr[0:-2] + ");\r"
                         getAllStr += "        return self::query($sql, $sqlParam, true);"
                         getAllStr += "\r    }\r"  # 不带limit的获取所有的数据
@@ -511,7 +634,12 @@ for row in results:#循环出所有的表名
                         getAllStr += "\r    {\r"
                         getAllStr += itemAssertStr
                         getAllStr += "        assert($limit != \"\");\r"
-                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 1 AND " + itemSqlStr[0:-5] + " order by id desc \".$limit;\r"
+                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 1 AND " + itemSqlStr[0:-5] + " order by "
+                        if hasSort:
+                            getAllStr += "sort"
+                        else:
+                            getAllStr += "id"
+                        getAllStr += " desc \".$limit;\r"
                         getAllStr += "        $sqlParam = array(" + itemStr[0:-2] + ");\r"
                         getAllStr += "        return self::query($sql, $sqlParam, true);"
                         getAllStr += "\r    }\r"  # 不带limit的获取所有的数据
@@ -531,7 +659,12 @@ for row in results:#循环出所有的表名
                             getAllStr += " : array"
                         getAllStr += "\r    {\r"
                         getAllStr += itemAssertStr
-                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE " + itemSqlStr[0:-5] + " order by id desc \";\r"
+                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE " + itemSqlStr[0:-5] + " order by "
+                        if hasSort:
+                            getAllStr += "sort"
+                        else:
+                            getAllStr += "id"
+                        getAllStr += " desc \";\r"
                         getAllStr += "        $sqlParam = array(" + itemStr[0:-2] + ");\r"
                         getAllStr += "        return self::query($sql, $sqlParam, true);"
                         getAllStr += "\r    }\r"  # 不带limit的获取所有的数据
@@ -551,7 +684,12 @@ for row in results:#循环出所有的表名
                         getAllStr += "\r    {\r"
                         getAllStr += itemAssertStr
                         getAllStr += "        assert($limit != \"\");\r"
-                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE " + itemSqlStr[0:-5] + " order by id desc \".$limit;\r"
+                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE " + itemSqlStr[0:-5] + " order by "
+                        if hasSort:
+                            getAllStr += "sort"
+                        else:
+                            getAllStr += "id"
+                        getAllStr += " desc \".$limit;\r"
                         getAllStr += "        $sqlParam = array(" + itemStr[0:-2] + ");\r"
                         getAllStr += "        return self::query($sql, $sqlParam, true);"
                         getAllStr += "\r    }\r"  # 不带limit的获取所有的数据
@@ -570,7 +708,12 @@ for row in results:#循环出所有的表名
                             getAllStr += " : array"
                         getAllStr += "\r    {\r"
                         getAllStr += itemAssertStr
-                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE " + itemSqlStr[0:-5] + " order by id desc limit 0,1\";\r"
+                        getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE " + itemSqlStr[0:-5] + " order by "
+                        if hasSort:
+                            getAllStr += "sort"
+                        else:
+                            getAllStr += "id"
+                        getAllStr += " desc limit 0,1\";\r"
                         getAllStr += "        $sqlParam = array(" + itemStr[0:-2] + ");\r"
                         getAllStr += "        return self::query($sql, $sqlParam, true);"
                         getAllStr += "\r    }\r"  # 不带limit的获取所有的数据
@@ -605,6 +748,27 @@ for row in results:#循环出所有的表名
             deleteStr += "\r    }\r"
             testFileFd.write(deleteStr)
             unitTestCommandList.append("./vendor/bin/phpunit --filter testgetOneById ./test/" + modelTestFileName)
+
+            #IN查询
+            getOneStr = zhushiStr.format(params="", usage="IN查询，根据ID获取所有的记录") + "    public static function getAllUndeletedByIdUseIn($ids)"
+            if phpVersion == 7:
+                getOneStr += " : array"
+            getOneStr += "\r    {\r"
+            getOneStr += "        assert($ids != \"\");\r"
+            getOneStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE find_in_set(`id`, \'$ids\') AND isDeleted = 0\";\r"
+            getOneStr += "        $sqlParam = array();\r"
+            getOneStr += "        return self::query($sql, $sqlParam, true);"
+            getOneStr += "\r    }\r"  # 根据ID获取一条的记录
+            fd.write(getOneStr)
+            # phpunit测试根据ID获取一条记录
+            deleteStr = zhushiStr.format(params="", usage="IN查询，根据ID获取一条记录") + "    public function testgetAllUndeletedByIdUseIn()\r    {\r"
+            deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllUndeletedByIdUseIn(\'1,2,3,4\');\r"
+            deleteStr += "        var_dump($record);\r"
+            deleteStr += "        #./vendor/bin/phpunit --filter testgetAllUndeletedByIdUseIn ./test/" + modelTestFileName
+            deleteStr += "\r    }\r"
+            testFileFd.write(deleteStr)
+            unitTestCommandList.append("./vendor/bin/phpunit --filter testgetAllUndeletedByIdUseIn ./test/" + modelTestFileName)
+
         else:
             getOneStr = zhushiStr.format(params="", usage="根据ID获取一条记录") + "    public static function getOneById($id)"
             if phpVersion == 7:
@@ -624,6 +788,26 @@ for row in results:#循环出所有的表名
             deleteStr += "\r    }\r"
             testFileFd.write(deleteStr)
             unitTestCommandList.append("./vendor/bin/phpunit --filter testgetOneById ./test/" + modelTestFileName)
+
+            # IN查询
+            getOneStr = zhushiStr.format(params="", usage="IN查询，根据ID获取所有的记录") + "    public static function getAllByIdUseIn($ids)"
+            if phpVersion == 7:
+                getOneStr += " : array"
+            getOneStr += "\r    {\r"
+            getOneStr += "        assert($id != \"\");\r"
+            getOneStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE find_in_set(`id`, \'$ids\')\";\r"
+            getOneStr += "        $sqlParam = array();\r"
+            getOneStr += "        return self::query($sql, $sqlParam, true);"
+            getOneStr += "\r    }\r"  # 根据ID获取一条的记录
+            fd.write(getOneStr)
+            # phpunit测试根据ID获取一条记录
+            deleteStr = zhushiStr.format(params="", usage="IN查询，根据ID获取一条记录") + "    public function testgetAllByIdUseIn()\r    {\r"
+            deleteStr += "        $record = " + modelFileName[0:-4] + "::getAllByIdUseIn(\'1,2,3,4\');\r"
+            deleteStr += "        var_dump($record);\r"
+            deleteStr += "        #./vendor/bin/phpunit --filter testgetAllByIdUseIn ./test/" + modelTestFileName
+            deleteStr += "\r    }\r"
+            testFileFd.write(deleteStr)
+            unitTestCommandList.append("./vendor/bin/phpunit --filter testgetAllByIdUseIn ./test/" + modelTestFileName)
 
         #select * from xxx where id = xx for update
         if hasIsDeleted:
@@ -679,7 +863,7 @@ for row in results:#循环出所有的表名
             #phpunit测试根据ID删除记录的方法，进回收站，不是直接删数据库的记录
             deleteStr = zhushiStr.format(params="",usage="删除记录的方法，进回收站，不是直接删数据库的记录") + "    public function testdeleteUpdateOne()\r    {\r"
             deleteStr += "        $record = " + modelFileName[0:-4] + "::getOneById(1);\r"
-            deleteStr += "        if(empty($record)){\r            echo \"搜索无数据\";\r            exit;\r}"
+            deleteStr += "        if(empty($record)){\r            echo \"搜索无数据\";\r            exit;\r        }\r"
             deleteStr += "        $record = $record[0];\r"
             deleteStr += "        $res= $record->deleteUpdateOne();\r"
             deleteStr += "        var_dump($res);\r"
@@ -688,13 +872,42 @@ for row in results:#循环出所有的表名
             testFileFd.write(deleteStr)
             unitTestCommandList.append("./vendor/bin/phpunit --filter testdeleteUpdateOne ./test/" + modelTestFileName)
 
+        if hasSort:
+            editSortStr = zhushiStr.format(params="", usage="编辑排序功能") + "    public function editOneSort()"
+            if phpVersion == 7:
+                editSortStr += " : array"
+            editSortStr += "\r    {\r"
+            editSortStr += "        $sql = \"UPDATE \".self::$table.\" SET `sort` = ? WHERE `id` = ?\";\r"
+            editSortStr += "        $sqlParam = array($this->sort, $this->id);\r"
+            editSortStr += "        return self::query($sql, $sqlParam, false);"
+            editSortStr += "\r    }\r"  # 编辑排序的方法
+            fd.write(editSortStr)
+            # phpunit测试根据ID删除记录的方法，进回收站，不是直接删数据库的记录
+            editSortStr = zhushiStr.format(params="",
+                                         usage="编辑排序功能") + "    public function testeditOneSort()\r    {\r"
+            editSortStr += "        $record = " + modelFileName[0:-4] + "::getOneById(1);\r"
+            editSortStr += "        if(empty($record)){\r            echo \"搜索无数据\";\r            exit;\r        }\r"
+            editSortStr += "        $record = $record[0];\r"
+            editSortStr += "        $record->sort = 10;\r"
+            editSortStr += "        $res= $record->editOneSort();\r"
+            editSortStr += "        var_dump($res);\r"
+            editSortStr += "        #./vendor/bin/phpunit --filter testeditOneSort ./test/" + modelTestFileName
+            editSortStr += "\r    }\r"
+            testFileFd.write(editSortStr)
+            unitTestCommandList.append("./vendor/bin/phpunit --filter testeditOneSort ./test/" + modelTestFileName)
+
         #select * from xxx where isDeleted = 0
         if hasIsDeleted:
             getAllStr = zhushiStr.format(params="", usage="不带limit的获取所有的没被删除的数据")+"    public static function getAllUndeletedWithOutLimit()"
             if phpVersion == 7:
                 getAllStr += " : array"
             getAllStr += "\r    {\r"
-            getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 0 order by id desc \";\r"
+            getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 0 order by "
+            if hasSort:
+                getAllStr += "sort"
+            else:
+                getAllStr += "id"
+            getAllStr += " desc \";\r"
             getAllStr += "        $sqlParam = array();\r"
             getAllStr += "        return self::query($sql, $sqlParam, true);"
             getAllStr += "\r    }\r"#不带limit的获取所有的数据
@@ -713,7 +926,12 @@ for row in results:#循环出所有的表名
                 getAllStr += " : array"
             getAllStr += "\r    {\r"
             getAllStr += "        assert($limit != \"\");\r"
-            getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 0  order by id desc \".$limit;\r"
+            getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 0  order by "
+            if hasSort:
+                getAllStr += "sort"
+            else:
+                getAllStr += "id"
+            getAllStr += " desc \".$limit;\r"
             getAllStr += "        $sqlParam = array();\r"
             getAllStr += "        return self::query($sql, $sqlParam, true);"
             getAllStr += "\r    }\r"  # 不带limit的获取所有的数据
@@ -731,7 +949,12 @@ for row in results:#循环出所有的表名
             if phpVersion == 7:
                 getAllStr += " : array"
             getAllStr += "\r    {\r"
-            getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 1 order by id desc \";\r"
+            getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 1 order by "
+            if hasSort:
+                getAllStr += "sort"
+            else:
+                getAllStr += "id"
+            getAllStr += " desc \";\r"
             getAllStr += "        $sqlParam = array();\r"
             getAllStr += "        return self::query($sql, $sqlParam, true);"
             getAllStr += "\r    }\r"  # 不带limit的获取所有的数据
@@ -750,7 +973,12 @@ for row in results:#循环出所有的表名
                 getAllStr += " : array"
             getAllStr += "\r    {\r"
             getAllStr += "        assert($limit != \"\");\r"
-            getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 1 order by id desc \".$limit;\r"
+            getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" WHERE `isDeleted` = 1 order by "
+            if hasSort:
+                getAllStr += "sort"
+            else:
+                getAllStr += "id"
+            getAllStr += " desc \".$limit;\r"
             getAllStr += "        $sqlParam = array();\r"
             getAllStr += "        return self::query($sql, $sqlParam, true);"
             getAllStr += "\r    }\r"  # 不带limit的获取所有的数据
@@ -768,7 +996,12 @@ for row in results:#循环出所有的表名
             if phpVersion == 7:
                 getAllStr += " : array"
             getAllStr += "\r    {\r"
-            getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" order by id desc \";\r"
+            getAllStr += "        $sql = \"SELECT * FROM \".self::$table.\" order by "
+            if hasSort:
+                getAllStr += "sort"
+            else:
+                getAllStr += "id"
+            getAllStr += " desc \";\r"
             getAllStr += "        $sqlParam = array();\r"
             getAllStr += "        return self::query($sql, $sqlParam, true);"
             getAllStr += "\r    }\r"  # 不带limit的获取所有的数据
@@ -787,7 +1020,12 @@ for row in results:#循环出所有的表名
                 getAllWithLimitStr += " : array"
             getAllWithLimitStr += "\r    {\r"
             getAllWithLimitStr += "        assert($limit != \"\");\r"
-            getAllWithLimitStr += "        $sql = \"SELECT * from \".self::$table.\" order by id desc \".$limit;\r"
+            getAllWithLimitStr += "        $sql = \"SELECT * from \".self::$table.\" order by "
+            if hasSort:
+                getAllWithLimitStr += "sort"
+            else:
+                getAllWithLimitStr += "id"
+            getAllWithLimitStr += " desc \".$limit;\r"
             getAllWithLimitStr += "        $sqlParam = array();\r"
             getAllWithLimitStr += "        return self::query($sql, $sqlParam, true);"
             getAllWithLimitStr += "\r    }\r"  # 带limit的获取所有的数据
@@ -824,7 +1062,7 @@ for row in results:#循环出所有的表名
         # phpunit测试编辑一条记录
         addStr = zhushiStr.format(params="", usage="测试编辑一条记录") + "    public function testeditOne()\r    {\r"
         addStr += "        $record = " + modelFileName[0:-4] + "::getOneById(1);\r"
-        addStr += "        if(empty($record)){\r            echo \"搜索无数据\";\r            exit;\r}"
+        addStr += "        if(empty($record)){\r            echo \"搜索无数据\";\r            exit;\r        }\r"
         addStr += "        $record = $record[0];\r"
         for column in tableColumnList:
             if column["type"] == "int":  # 如果字段是int类型：
