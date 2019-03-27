@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>AdminLTE 2 | Data Tables</title>
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="/bower_components/font-awesome/css/font-awesome.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="/bower_components/Ionicons/css/ionicons.min.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="/dist/css/AdminLTE.min.css">
+    <!-- AdminLTE Skins. Choose a skin from the css/skins
+         folder instead of downloading all of them to reduce the load. -->
+    <link rel="stylesheet" href="/dist/css/skins/_all-skins.min.css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- Google Font -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+<div class="wrapper">
+
+    <header class="main-header">
+        <!-- Logo -->
+        <a href="/index2.html" class="logo">
+            <!-- mini logo for sidebar mini 50x50 pixels -->
+            <span class="logo-mini"><b>A</b>LT</span>
+            <!-- logo for regular state and mobile devices -->
+            <span class="logo-lg">中天招聘管理后台</span>
+        </a>
+        <!-- Header Navbar: style can be found in header.less -->
+        <nav class="navbar navbar-static-top">
+            <!-- Sidebar toggle button-->
+            <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+
+            <div class="navbar-custom-menu">
+                <ul class="nav navbar-nav">
+                    <!-- Messages: style can be found in dropdown.less-->
+                    <!-- Notifications: style can be found in dropdown.less -->
+
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <!-- Left side column. contains the logo and sidebar -->
+    <aside class="main-sidebar">
+        <!-- sidebar: style can be found in sidebar.less -->
+        <section class="sidebar">
+
+
+            <!-- sidebar menu: : style can be found in sidebar.less -->
+            <ul class="sidebar-menu" data-widget="tree">
+
+
+                <?php include("../Template/menu.html");?>
+
+
+            </ul>
+        </section>
+        <!-- /.sidebar -->
+    </aside>
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <h1>
+                文章管理
+                <small>编辑文章</small>
+            </h1>
+            <ol class="breadcrumb">
+                <li><a href="#"><i class="fa fa-dashboard"></i> 首页</a></li>
+                <li><a href="#">文章管理</a></li>
+                <li class="active">编辑文章</li>
+            </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="row">
+                <div class="col-xs-12">
+                    <!-- general form elements -->
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+
+                        </div>
+                        <!-- /.box-header -->
+                        <!-- form start -->
+                        <form role="form" name="myform" action="/doEditArticle?id=<?php echo $articleInfo->id;?>" method="post" enctype="multipart/form-data">
+                            <div class="box-body">
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">文章标题</label>
+                                    <input type="text" class="form-control" id="" name="title" value="<?php echo $articleInfo->title;?>">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">文章简介</label>
+                                    <input type="text" class="form-control" id="" name="desc" value="<?php echo $articleInfo->desc;?>">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>文章分类</label>
+                                    <select class="form-control" name="cateId">
+                                        <option selected>请选择</option>
+                                        <?php
+                                            if(!empty($allCate)){
+                                                foreach($allCate as $key=>$value){
+                                                    $str = "<option value='".$value->id."'";
+                                                    if($value->id == $articleInfo->articleCatId){
+                                                        $str .= "selected";
+                                                    }
+                                                    $str .= ">".$value->categoryName."</option>";
+                                                    echo $str;
+                                                }
+                                            }
+                                        ?>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="exampleInputFile">首页列表原图片</label>
+                                    <img src="/Upload/<?php echo $articleInfo->indexImg;?>" style="width:200px;height:200px;">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="exampleInputFile">首页列表图片</label>
+                                    <input type="file" id="" name="myfile[]">
+
+                                    <p class="help-block">支持任何格式的图片文件</p>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="label">
+                                        <label>文章内容：</label>
+                                    </div>
+                                    <div class="field">
+                                        <!-- 加载编辑器的容器 -->
+                                        <script id="container" name="content" type="text/plain">
+                                            <?php echo $articleInfo->content; ?>
+                                        </script>
+                                        <!-- 配置文件 -->
+                                        <script type="text/javascript" src="/ueditor/ueditor.config.js"></script>
+                                        <!-- 编辑器源码文件 -->
+                                        <script type="text/javascript" src="/ueditor/ueditor.all.js?time=123"></script>
+                                        <!-- 实例化编辑器 -->
+                                        <script type="text/javascript">
+                                            var ue = UE.getEditor('container',{
+                                                initialFrameWidth : '100%',
+                                                initialFrameHeight: 300,
+                                            });
+
+
+                                        </script>
+                                        <div class="tips"></div>
+                                    </div>
+                                </div>
+
+                                <!--<div class="form-group">-->
+                                <!--&lt;!&ndash; /.box-header &ndash;&gt;-->
+                                <!--<label for="exampleInputFile">文章内容</label>-->
+                                <!--<div class="box-body pad">-->
+                                <!--<textarea id="editor1" name="content" rows="10" cols="80">-->
+                                <!--请输入内容...-->
+                                <!--</textarea>-->
+                                <!--</div>-->
+                                <!--</div>-->
+
+
+
+
+                                <div class="checkbox">
+                                    <label>
+
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- /.box-body -->
+
+                            <div class="box-footer">
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- /.box -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </section>
+        <!-- /.content -->
+    </div>
+    <!-- /.content-wrapper -->
+    <footer class="main-footer">
+
+    </footer>
+
+
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery 3 -->
+<script src="/bower_components/jquery/dist/jquery.min.js"></script>
+<!-- Bootstrap 3.3.7 -->
+<script src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- DataTables -->
+<script src="/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+<!-- SlimScroll -->
+<script src="/bower_components/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+<!-- FastClick -->
+<script src="/bower_components/fastclick/lib/fastclick.js"></script>
+<!-- AdminLTE App -->
+<script src="/dist/js/adminlte.min.js"></script>
+<!-- AdminLTE for demo purposes -->
+<script src="/dist/js/demo.js"></script>
+<!-- page script -->
+<!--<script>-->
+<!--$(function () {-->
+<!--$('#example1').DataTable()-->
+<!--$('#example2').DataTable({-->
+<!--'paging'      : true,-->
+<!--'lengthChange': false,-->
+<!--'searching'   : false,-->
+<!--'ordering'    : true,-->
+<!--'info'        : true,-->
+<!--'autoWidth'   : false-->
+<!--})-->
+<!--})-->
+<!--</script>-->
+
+</body>
+</html>

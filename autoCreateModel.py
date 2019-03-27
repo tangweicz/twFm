@@ -1,7 +1,7 @@
 #!/Library/Frameworks/Python.framework/Versions/3.6/bin/python3.6
 #! -*- coding=utf-8 -*-
 
-import pymysql, datetime, time, sys, subprocess, re
+import pymysql, datetime, time, sys, subprocess, re, os, shutil
 from itertools import combinations
 host = ""
 port = 0
@@ -108,6 +108,7 @@ for row in results:#循环出所有的表名
         if len(tableListTmp) > 0:
             tableColumnList.append(tableListTmp)#将数据写入到列表中
     modelFileName = ""
+    controllerFileName = ""
     modelTestFileName = ""
     noExtensionModelFileName = ""
     count = 0
@@ -120,19 +121,167 @@ for row in results:#循环出所有的表名
                 noExtensionModelFileName = noExtensionModelFileName + tmp
                 count += 1
         modelFileName = noExtensionModelFileName + "Model.php"
+        controllerFileName = noExtensionModelFileName + "Controller.php"
         modelTestFileName = noExtensionModelFileName + "ModelTest.php"
     else:
         noExtensionModelFileName = everyTableName
         modelFileName = noExtensionModelFileName+"Model.php"
+        controllerFileName = noExtensionModelFileName + "Controller.php"
         modelTestFileName = noExtensionModelFileName + "ModelTest.php"
 
     unitTestCommandList = list()  # 存放所有的单元测试命令
-    #单元测试文件在这儿写
+    allColumnWithIdList = list()
+    hasIsDeleted = False  # 判断是否有isDeleted字段，即软删除字段
+    hasSort = False  # 判断是否有sort字段，排序字段
+    for column in tableColumnList:
+        if "id" in column["name"].lower():
+            allColumnWithIdList.append(column["name"])
+        if column["name"] == "isDeleted":
+            hasIsDeleted = True
+        if column["name"] == "sort":
+            hasSort = True
+
+
+    zhushiStr = "    /**\r     * User: tangwei\r     * Date: " + time.strftime('%Y.%m.%d', time.localtime(time.time())) + "\r     * @param {params}\r     * @return\r     * Function:{usage}\r     */\r"  # 注释文本
+    with open("./Controllers/"+controllerFileName, "w+") as fd:#写入Controller文件
+        fd.write("<?php \r")
+        fd.write("namespace Controllers;\r")
+        fd.write("use Libs\Controller;\r")
+        fd.write("use Libs\CTemplate;\r")
+        fd.write("use Libs\Page;\r")
+        fd.write("use Models\\"+noExtensionModelFileName+"Model;\r")
+        fd.write("class " + noExtensionModelFileName + "Controller extends Controller\r{\r")
+
+        #写入 新增数据的界面显示Controller方法
+        addStr = zhushiStr.format(params="", usage="新增数据的界面显示")
+        addStr += "    public function add"+noExtensionModelFileName+"()\r"
+        addStr += "    {\r"
+        addStr += "        $ctemplate=new CTemplate(\""+noExtensionModelFileName+"/add.html\",\"dafault\",__DIR__.\"/../Template\");\r"
+        addStr += "        $ctemplate->render(array());\r"
+        addStr += "    }\r"
+        fd.write(addStr)
+        if not os.path.exists("./Template/"+noExtensionModelFileName):#判断Template下是否有文件夹，如果没有创建之
+            os.mkdir("./Template/"+noExtensionModelFileName)
+        shutil.copy("./Template/add.html", "./Template/"+noExtensionModelFileName+"/add.html")#拷贝add.html到上面的文件夹中
+
+
+        #写入 新增数据的逻辑操作的Controller方法
+        addStr = zhushiStr.format(params="", usage="新增数据的逻辑操作")
+        addStr += "    public function doadd"+noExtensionModelFileName+"()\r"
+        addStr += "    {\r"
+        if len(tableColumnList) > 0:#循环表中字段，判断controller层中的post数据判断
+            for item in tableColumnList:
+                if item["name"] != "isDeleted" and item["name"] != "addTime" and item["name"] != "sort":#如果字段名为isDeleted为0时，字段是不需要post的提交，然后新增数据的。所以这儿判断，不为isDleted等字段就不需要。
+                    if not item["type"] == "int":
+                        addStr += "        if(!isset($_POST[\""+item["name"]+"\"]) || trim($_POST[\""+item["name"]+"\"]) == \"\")$this->errorBack(\""+item["name"]+" must upload\");\r"
+                    else:
+                        addStr += "        if(!isset($_POST[\"" + item["name"] + "\"]) || !is_numeric($_POST[\""+item["name"]+"\"]) || $_POST[\"" + item["name"] + "\"] <= 0 )$this->errorBack(\"" + item["name"] + " correct type\");\r"
+                    addStr += "        $"+item["name"]+" = $this->filter($_POST[\""+item["name"]+"\"]);\r"
+        addStr += "        $" + noExtensionModelFileName + "Model = new " + noExtensionModelFileName + "Model();\r"
+        if len(tableColumnList) > 0:
+            for item in tableColumnList:
+                if item["name"] == "isDeleted" or item["name"] == "sort":
+                    addStr += "        $" + noExtensionModelFileName + "Model->"+item["name"]+" = 0;\r"
+                elif "time" in item["name"].lower():
+                    addStr += "        $" + noExtensionModelFileName + "Model->"+item["name"]+" = date(\"Y-m-d H:i:s\");\r"
+                else:
+                    addStr += "        $" + noExtensionModelFileName + "Model->"+item["name"]+" = $"+item["name"]+";\r"
+        addStr += "        $res = $"+noExtensionModelFileName+"Model->addOne();\r"
+        addStr += "        if(!empty($res))$this->jump(\"新增成功\", \"/"+noExtensionModelFileName+"List\");\r"
+        addStr += "        $this->jump(\"新增失败\", \"/add"+noExtensionModelFileName+"\");\r"
+        addStr += "    }\r"
+        fd.write(addStr)
+
+        #写入 编辑数据的界面显示的Controller方法
+        editStr = zhushiStr.format(params="", usage="编辑数据的界面显示")
+        editStr += "    public function edit"+noExtensionModelFileName+"()\r"
+        editStr += "    {\r"
+        editStr += "        if (!isset($_GET[\"id\"]) || !is_numeric($_GET[\"id\"]) || $_GET[\"id\"] <= 0) $this->errorBack(\"参数错误\");\r"
+        editStr += "        $id = $this->filter($_GET[\"id\"]);\r"
+        editStr += "        $"+noExtensionModelFileName+"Date = "+noExtensionModelFileName+"Model::getOneById($id);\r"
+        editStr += "        if(empty($"+noExtensionModelFileName+"Date))$this->errorBack(\"不存在该数据或已被删除\");\r"
+        editStr += "        $"+noExtensionModelFileName+"Date = $"+noExtensionModelFileName+"Date[0];\r"
+        editStr += "        $ctemplate=new CTemplate(\""+noExtensionModelFileName+"/edit.html\",\"dafault\",__DIR__.\"/../Template\");\r"
+        editStr += "        $ctemplate->render(array(\""+noExtensionModelFileName+"Date\"=>$"+noExtensionModelFileName+"Date));\r"
+        editStr += "    }\r"
+        fd.write(editStr)
+        if not os.path.exists("./Template/"+noExtensionModelFileName):#判断Template下是否有文件夹，如果没有创建之
+            os.mkdir("./Template/"+noExtensionModelFileName)
+        shutil.copy("./Template/edit.html", "./Template/"+noExtensionModelFileName+"/edit.html")#拷贝add.html到上面的文件夹中
+
+        #写入 编辑数据的逻辑操作的Controller方法
+        editStr = zhushiStr.format(params="", usage="编辑数据的逻辑操作")
+        editStr += "    public function doedit" + noExtensionModelFileName + "()\r"
+        editStr += "    {\r"
+        editStr += "        if (!isset($_GET[\"id\"]) || !is_numeric($_GET[\"id\"]) || $_GET[\"id\"] <= 0) $this->errorBack(\"参数错误\");\r"
+        editStr += "        $id = $this->filter($_GET[\"id\"]);\r"
+        if len(tableColumnList) > 0:#循环表中字段，判断controller层中的post数据判断
+            for item in tableColumnList:
+                if item["name"] != "isDeleted" and item["name"] != "addTime" and item["name"] != "sort":#如果字段名为isDeleted为0时，字段是不需要post的提交，然后新增数据的。所以这儿判断，不为isDleted等字段就不需要。
+                    if not item["type"] == "int":
+                        editStr += "        if(!isset($_POST[\""+item["name"]+"\"]) || trim($_POST[\""+item["name"]+"\"]) == \"\")$this->errorBack(\""+item["name"]+" must upload\");\r"
+                    else:
+                        editStr += "        if(!isset($_POST[\"" + item["name"] + "\"]) || !is_numeric($_POST[\""+item["name"]+"\"]) || $_POST[\"" + item["name"] + "\"] <= 0 )$this->errorBack(\"" + item["name"] + " correct type\");\r"
+                    editStr += "        $"+item["name"]+" = $this->filter($_POST[\""+item["name"]+"\"]);\r"
+        editStr += "        $" + noExtensionModelFileName + "Date = " + noExtensionModelFileName + "Model::getOneById($id);\r"
+        editStr += "        if(empty($" + noExtensionModelFileName + "Date))$this->errorBack(\"不存在该数据或已被删除\");\r"
+        editStr += "        $" + noExtensionModelFileName + "Date = $" + noExtensionModelFileName + "Date[0];\r"
+        if len(tableColumnList) > 0:
+            for item in tableColumnList:
+                if item["name"] == "isDeleted" or item["name"] == "sort":
+                    editStr += ""
+                elif item["name"] == "addTime":
+                    editStr += ""
+                else:
+                    editStr += "        $" + noExtensionModelFileName + "Date->"+item["name"]+" = $"+item["name"]+";\r"
+        editStr += "        $res = $"+noExtensionModelFileName+"Date->editOne();\r"
+        editStr += "        $this->jump(\"编辑成功\", \"/"+noExtensionModelFileName+"List\");\r"
+        editStr += "    }\r"
+        fd.write(editStr)
+
+        #写入 删除一条记录的逻辑操作的Controller方法
+        deleteStr = zhushiStr.format(params="", usage="删除一条数据的逻辑操作")
+        deleteStr += "    public function delete" + noExtensionModelFileName + "()\r"
+        deleteStr += "    {\r"
+        deleteStr += "        if (!isset($_GET[\"id\"]) || !is_numeric($_GET[\"id\"]) || $_GET[\"id\"] <= 0) $this->errorBack(\"参数错误\");\r"
+        deleteStr += "        $id = $this->filter($_GET[\"id\"]);\r"
+        deleteStr += "        $" + noExtensionModelFileName + "Date = " + noExtensionModelFileName + "Model::getOneById($id);\r"
+        deleteStr += "        if(empty($" + noExtensionModelFileName + "Date))$this->errorBack(\"不存在该数据或已被删除\");\r"
+        deleteStr += "        $" + noExtensionModelFileName + "Date = $" + noExtensionModelFileName + "Date[0];\r"
+        if hasIsDeleted:
+            deleteStr += "        $res = $" + noExtensionModelFileName + "Date->deleteUpdateOne();\r"
+        else:
+            deleteStr += "        $res = $" + noExtensionModelFileName + "Date->deleteOne();\r"
+        deleteStr += "        if(!empty($res))$this->jump(\"操作成功\", \"/" + noExtensionModelFileName + "List\");\r"
+        deleteStr += "        $this->jump(\"操作失败\", \"/" + noExtensionModelFileName + "List\");\r"
+        deleteStr += "    }\r"
+        fd.write(deleteStr)
+
+        # 写入 数据的列表展示页面的Controller方法
+        listStr = zhushiStr.format(params="", usage="显示列表页面")
+        listStr += "    public function " + noExtensionModelFileName + "List()\r"
+        listStr += "    {\r"
+        listStr += "        $all"+noExtensionModelFileName+" = "+noExtensionModelFileName+"Model::getAllUndeletedWithOutLimit();\r"
+        listStr += "        $allNum = count($all"+noExtensionModelFileName+");\r"
+        listStr += "        $page = new Page($allNum,self::$PAGESIZE);\r"
+        listStr += "        $all"+noExtensionModelFileName+"Date = "+noExtensionModelFileName+"Model::getAllUndeletedWithLimit($page->limit);\r"
+        listStr += "        $ctemplate=new CTemplate(\"articleCate/list.html\",\"dafault\",__DIR__.\"/../Template\");\r"
+        listStr += "        $all" + noExtensionModelFileName + "Date = $all" + noExtensionModelFileName + "Date[0];\r"
+        listStr += "        $ctemplate->render(array(\"all"+noExtensionModelFileName+"Date\"=>$all"+noExtensionModelFileName+"Date, \"page\"=>$page->showpage()));\r"
+        listStr += "    }\r"
+        fd.write(listStr)
+        if not os.path.exists("./Template/"+noExtensionModelFileName):#判断Template下是否有文件夹，如果没有创建之
+            os.mkdir("./Template/"+noExtensionModelFileName)
+        shutil.copy("./Template/list.html", "./Template/"+noExtensionModelFileName+"/list.html")#拷贝add.html到上面的文件夹中
+
+        fd.write("\r}")
+        fd.close()
+
     testFileFd = open("./test/"+modelTestFileName, "w+")
     testFileFd.write("<?php\r")
     testFileFd.write("use Models\\"+modelTestFileName[0:-8]+";\r")
     testFileFd.write("class "+modelTestFileName[0:-4]+" extends PHPUnit_Framework_TestCase {\r")
-    with open("./Models/" + modelFileName, "w+") as fd:#创建表名对应的数据库model文件，下面就是往文件中写入数据
+    with open("./Models/" + modelFileName, "w+") as fd:#创建表名对应的数据库model文件和单元测试文件，下面就是往文件中写入数据
         fd.write("<?php \r")
         fd.write("namespace Models;\r")
         fd.write("use Libs\CObject;\r")
@@ -141,7 +290,7 @@ for row in results:#循环出所有的表名
         #针对表的增删改查的代码都从这儿开始写
 
         #insert into xxx () values ()
-        zhushiStr = "    /**\r     * User: tangwei\r     * Date: "+time.strftime('%Y.%m.%d',time.localtime(time.time()))+"\r     * @param {params}\r     * @return\r     * Function:{usage}\r     */\r"#注释文本
+
         addStr = zhushiStr.format(params="", usage="新增一条记录")+"    public function addOne()"
         if phpVersion == 7:
             addStr += " : array "
@@ -205,16 +354,8 @@ for row in results:#循环出所有的表名
         testFileFd.write(deleteStr)
         unitTestCommandList.append("./vendor/bin/phpunit --filter testdeleteOne ./test/" + modelTestFileName)
 
-        allColumnWithIdList = list()
-        hasIsDeleted = False#判断是否有isDeleted字段，即软删除字段
-        hasSort = False#判断是否有sort字段，排序字段
-        for column in tableColumnList:
-            if "id" in column["name"].lower():
-                allColumnWithIdList.append(column["name"])
-            if column["name"] == "isDeleted":
-                hasIsDeleted = True
-            if column["name"] == "sort":
-                hasSort = True
+
+
 
         #select * from xxx=xxx
         for column in tableColumnList:

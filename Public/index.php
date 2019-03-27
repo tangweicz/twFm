@@ -8,7 +8,7 @@
 
 ini_set("display_errors", "On");
 
-error_reporting(E_ALL | E_STRICT);
+error_reporting(E_ERROR | E_WARNING | E_PARSE);
 
 ini_set('date.timezone','Asia/Shanghai');
 
