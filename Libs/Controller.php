@@ -270,4 +270,16 @@ class Controller
 
     }
 
+    public function jsonError($message)
+    {
+        echo json_encode(array("status"=>"error", "message"=>$message));
+        exit;
+    }
+
+    public function jsonSuccess($message)
+    {
+        echo json_encode(array("status"=>"success", "message"=>$message));
+        exit;
+    }
+
 }
