@@ -311,8 +311,8 @@ for row in results:#循环出所有的表名
             columnStr += "`"+column["name"]+"`,"
             questionStr += " ?,"
             columnArrayStr += "            $this->"+column["name"]+","+operatorLine+""
-        addStr += "        $sql = \"INSERT INTO \".self::$table.\" ({columns}) VALUES ({question})\";"+operatorLine+"".format(columns=columnStr[0:-1], question=questionStr[0:-1])
-        addStr += "        $sqlParam = array("+operatorLine+"{array});"+operatorLine+"".format(array=columnArrayStr[0:-1])
+        addStr += "        $sql = \"INSERT INTO \".self::$table.\" ({columns}) VALUES ({question})\";\n".format(columns=columnStr[0:-1], question=questionStr[0:-1])
+        addStr += "        $sqlParam = array("+operatorLine+"{array});\n".format(array=columnArrayStr[0:-1])
         addStr += "        return self::query($sql, $sqlParam, false);"
         addStr += ""+operatorLine+"    }"+operatorLine+""#新增的方法
         fd.write(addStr)
@@ -1200,8 +1200,8 @@ for row in results:#循环出所有的表名
                     editStr += "        assert(isset($this->" + column["name"] + ") && $this->" + column["name"] + " != '' );"+operatorLine+""
                 columnStr += "`" + column["name"] + "` = ?,"
                 columnArrayStr += "            $this->" + column["name"] + ","+operatorLine+""
-        editStr += "        $sql = \"UPDATE \".self::$table.\" SET {columns} WHERE `id` = ? \";"+operatorLine+"".format(columns=columnStr[0:-1])
-        editStr += "        $sqlParam = array("+operatorLine+"{array}"+operatorLine+"            $this->id"+operatorLine+"        );"+operatorLine+"".format(array=columnArrayStr[0:-1])
+        editStr += "        $sql = \"UPDATE \".self::$table.\" SET {columns} WHERE `id` = ? \";\n".format(columns=columnStr[0:-1])
+        editStr += "        $sqlParam = array(\n{array}\n            $this->id\n        );\n".format(array=columnArrayStr[0:-1])
         editStr += "        return self::query($sql, $sqlParam, false);"
         editStr += ""+operatorLine+"    }"+operatorLine+""#编辑一条记录
         fd.write(editStr)
