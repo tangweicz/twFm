@@ -11,7 +11,6 @@ Public目录中：项目公共文件夹，存放css、图片、js等\
 test目录中：针对Model层的代码，挨个生成的phpunit的单元测试代码，也由autoCreateModel.py自动生成，自动运行测试，测试的日志记录在，unitTestFinishedLog.txt中\
 vendor目录中：composer安装的类库
 Template目录为静态模板目录，对应controller中的目录，挨个对比，每个文件夹中有add.html、list.html、edit.html\
-\
 
 autoCreateModel.py的使用方法:
 >>>>eg: autoCreateModel.py 
