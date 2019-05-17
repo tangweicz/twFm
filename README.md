@@ -15,7 +15,7 @@ vendor目录中：composer安装的类库
 
 autoCreateModel.py的使用方法:
 >>>>eg: autoCreateModel.py 
->>>>>>>>-t 表名 如果不指定-t 参数全表生成 \
+>>>>>>>>-t 表名 如果不指定-t 参数全库生成 \
                         -c 生成Controller \
                         -m 生成Model和Unittest \
                         -h 查看脚本的使用规则 \
