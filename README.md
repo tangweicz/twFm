@@ -1,6 +1,7 @@
 # twFm
 Php rapid development framework built with composer \
 用composer搭建起来的一个很简单的php开发框架，自己用这个框架开发了2年多，很多项目都是在此框架上开发，所以分享给大家。要求版本php >= 5.6。最好要本地安装了python环境且3.0以上,否则无法使用自动生成Model层、Controler层、单元测试等的功能。\
+下载完成之后，首先运行 composer install 安装项目依赖的composer的所有依赖 \
 Config目录中：Config.php为配置文件，数据库连接配置在这儿。Route.php为访问路径文件，所有的路由配置在这儿。\
 Controllers目录中：各个逻辑层的代码, 运行autoCreateModel.py文件，会自动生成所有的controller文件，内部代码有对应的增删改查操作\
 Libs目录中：所有的工具类\
